@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react';
 import { fetchProducts } from '../services/api';
 import { useCart } from '../context/CartContext';
 
+/**
+ * Catalogue : liste des produits avec prix et stock ; le bouton d'ajout est désactivé en rupture de stock.
+ */
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const { dispatch } = useCart();

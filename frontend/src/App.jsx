@@ -73,6 +73,10 @@ const router = createBrowserRouter([
   },
 ]);
 
+/**
+ * Racine de l'application : fournit la session utilisateur (AuthProvider) à toutes les pages
+ * et branche le routeur. Les routes protégées passent par ProtectedRoute / AdminRoute.
+ */
 const App = () => (
   <AuthProvider>
     <RouterProvider router={router} />

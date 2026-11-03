@@ -6,6 +6,10 @@ import http from '../services/http';
 
 const AuthContext = createContext();
 
+/**
+ * Fournit `user`, `isAdmin`, `loading`, `login()` et `logout()` à toute l'application.
+ * @param {{ children: React.ReactNode }} props
+ */
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); // { username, role } ou null
   const [loading, setLoading] = useState(true);

@@ -197,7 +197,7 @@ Sur chaque push et pull request vers `main` / `develop` :
 | 24 | Déploiements Vercel en échec (`fatal: bad object`) après un push de plusieurs commits : le dernier commit déployé n'était plus dans le clone partiel | `*/vercel.json` | La règle vérifie que le commit existe (`git rev-parse --verify`), sinon elle reconstruit | ✅ |
 | 25 | Page admin : libellé « Status » en anglais, case « Nouveau stock » trop étroite (texte tronqué), titres de sections incohérents | `Admin.jsx` | Libellés en français, case élargie, titres harmonisés | ✅ |
 
-**Vérification** : test de fumée `scripts/smoke-test.js` (25 contrôles), exécuté en local (Docker) et intégré à la CI avec une vraie base MongoDB ; parcours complet rejoué dans un navigateur (inscription, connexion, panier, livraison, commande, déconnexion). `[capture : session-2/E27-E28-test-de-fumee-25-controles.png, session-2/E27-E29-ci-verte-merge-pr4.png, session-1/E22-prod-administration.png]`
+**Vérification** : test de fumée `scripts/smoke-test.js` (25 contrôles, 27 depuis la 2.0.2 avec les injections HTML/JS), exécuté en local (Docker) et intégré à la CI avec une vraie base MongoDB ; parcours complet rejoué dans un navigateur (inscription, connexion, panier, livraison, commande, déconnexion). `[capture : session-2/E27-E28-test-de-fumee-25-controles.png, session-2/E27-E29-ci-verte-merge-pr4.png, session-1/E22-prod-administration.png]`
 
 ---
 
@@ -216,6 +216,8 @@ Sur chaque push et pull request vers `main` / `develop` :
 | 9 | Secrets journalisés et distribués (session 1) | Fuite de mots de passe, tokens, SMTP | Voir E22 : secrets retirés des logs, régénérés, stockés en *Secret* Vercel | 0 secret dans l'historique Git |
 | 10 | `/notify` ouvert à tous (session 1) | Relais d'e-mails abusif | Clé interne à temps constant entre services | 401 sans clé |
 | 11 | **Dépendances vulnérables** | Exploitation de failles connues | Services Node : `npm audit fix` ; frontend : **migration CRA → Vite** (CRA n'est plus maintenu) | Frontend : **71 vulnérabilités (dont 4 critiques) → 0** ; services : 0 high/critical (contrôle CI) |
+| 12 | **Injection HTML/JS** (`<script>alert('test')</script>`, `<img onerror=…>`) dans les champs libres | XSS stockée : script exécuté chez l'admin qui consulte la commande | Nom d'utilisateur alphanumérique ; adresse refusée si elle contient `<` ou `>` (Joi) ; React échappe tout affichage (aucun `dangerouslySetInnerHTML`) ; e-mails envoyés en texte brut | 2 contrôles du test de fumée : nom d'utilisateur et adresse piégés → 400 |
+| 13 | **Robustesse du `JWT_SECRET`** : secret du sujet faible et distribué, aucun contrôle de longueur | Un secret court se casse par force brute à partir d'un seul token, puis permet de fabriquer un token admin | Secrets régénérés (`openssl rand -hex 32`, 256 bits, différents par environnement) ; `config/secrets.js` : le serveur **refuse de démarrer** si `JWT_SECRET` fait moins de 32 caractères ; algorithme imposé (HS256) | Démarrage avec un secret de 5 caractères → arrêt avec un message explicite |
 
 `[capture : session-2/E28-cookie-httponly-secure-strict.png, session-2/E28-console-document-cookie-vide.png, session-2/E28-localstorage-vide.png, session-2/E28-npm-audit-frontend-0-vulnerabilite.png]`
 
@@ -228,8 +230,9 @@ Remarque sur `connect-flash` (cité dans les consignes) : ce module repose sur d
 ## E29 — Documentation et CHANGELOG
 
 - **Documentation générée à partir du code** : commentaires JSDoc (`@module`, `@param`, `@returns`, `@typedef`) sur tous les fichiers du backend, du gateway et des microservices, puis génération HTML par `npm run docs` (JSDoc), dans [`docs/api`](docs/api/index.html) : 66 pages, une par module, avec le code source annoté. La CI échoue si un commentaire JSDoc est invalide. `[capture : session-2/E29-doc-jsdoc-accueil.png, session-2/E29-doc-jsdoc-stockService.png]`
+- **Composants React commentés** : un bloc de documentation au-dessus de chaque composant, page et contexte (rôle, props, comportement), et les commentaires restés en anglais ont été traduits.
 - **README.md** : architecture, tableau des routes de l'API, démarrage local (Docker ou non), scripts, flux CI/CD, sécurité, supervision.
-- **CHANGELOG.md** au format *Keep a Changelog* et versionnage sémantique : `1.0.0` (version fournie), `1.1.0` (mise en production), `2.0.0` (robustesse, sécurité, documentation), `2.0.1` (finitions de la page admin).
+- **CHANGELOG.md** au format *Keep a Changelog* et versionnage sémantique : `1.0.0` (version fournie), `1.1.0` (mise en production), `2.0.0` (robustesse, sécurité, documentation), `2.0.1` (finitions de la page admin), `2.0.2` (injections HTML/JS, robustesse du `JWT_SECRET`, commentaires React).
 - **Historique Git** lisible : commits conventionnels (`feat`, `fix`, `ci`, `docs`, `style`…) avec description détaillée, formatage isolé dans un commit `style`.
 
 ---

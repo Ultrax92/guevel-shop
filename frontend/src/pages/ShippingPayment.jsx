@@ -1,8 +1,12 @@
+// src/pages/ShippingPayment.jsx
 import { useNavigate } from 'react-router-dom';
 import ShippingMethodSelection from '../components/ShippingMethodSelection';
 import PaymentMethodSelection from '../components/PaymentMethodSelection';
 import ShippingAddress from '../components/ShippingAddress';
 
+/**
+ * Étape livraison et paiement : regroupe l'adresse, le transporteur et le mode de paiement.
+ */
 const ShippingPayment = () => {
   const navigate = useNavigate();
   // Naviguer vers la page de commande

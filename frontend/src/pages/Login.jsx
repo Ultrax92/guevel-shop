@@ -4,6 +4,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { errorMessage } from '../services/http';
 
+/**
+ * Connexion : en cas de succès, le serveur pose le cookie de session HttpOnly et l'utilisateur
+ * revient sur la page qu'il demandait. Les erreurs du serveur sont affichées dans le formulaire.
+ */
 const Login = () => {
   const [credentials, setCredentials] = useState({
     username: '',

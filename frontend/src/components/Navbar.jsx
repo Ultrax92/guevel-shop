@@ -3,6 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
+/**
+ * Barre de navigation : nom de l'utilisateur, lien Administration (admins), panier avec le nombre
+ * d'articles et bouton Connexion / Déconnexion. Se met à jour dès que la session change.
+ */
 const Navbar = () => {
   const navigate = useNavigate();
   const { cart } = useCart();

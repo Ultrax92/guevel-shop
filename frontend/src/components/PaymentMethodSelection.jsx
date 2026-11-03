@@ -1,5 +1,10 @@
+// src/components/PaymentMethodSelection.jsx
 import { useCart } from '../context/CartContext';
 
+/**
+ * Choix du mode de paiement, enregistré dans le panier.
+ * Aucune option n'est présélectionnée : l'utilisateur doit faire un choix explicite.
+ */
 const PaymentMethodSelection = () => {
   const { paymentMethod, dispatch } = useCart();
   const paymentOptions = ['Carte bancaire', 'PayPal', 'Virement'];
@@ -11,7 +16,7 @@ const PaymentMethodSelection = () => {
   return (
     <div className="border p-4 rounded-md">
       <label htmlFor="payment" className="block text-sm font-medium text-gray-700">
-        Mode de paiement:
+        Mode de paiement :
       </label>
       <select
         id="payment"

@@ -10,6 +10,18 @@ const SHIPPING_METHODS = ['colissimo', 'chronopost'];
 
 const objectId = Joi.string().hex().length(24);
 
+// Texte libre sans balise HTML : bloque les injections HTML/JS (<script>, <img onerror=…>) dès l'entrée,
+// en plus de l'échappement automatique de React à l'affichage et des e-mails envoyés en texte brut.
+const plainText = (label, min, max) =>
+  Joi.string()
+    .trim()
+    .min(min)
+    .max(max)
+    .pattern(/^[^<>]*$/)
+    .required()
+    .label(label)
+    .messages({ 'string.pattern.base': `${label} ne doit pas contenir de balises HTML (< ou >).` });
+
 /** Inscription : identifiant alphanumérique, e-mail valide, mot de passe d'au moins 8 caractères avec lettre et chiffre. */
 const registerSchema = Joi.object({
   username: Joi.string().trim().alphanum().min(3).max(30).required().label("Le nom d'utilisateur"),
@@ -50,15 +62,15 @@ const orderSchema = Joi.object({
     .required()
     .label('Le panier'),
   shippingAddress: Joi.object({
-    street: Joi.string().trim().min(3).max(200).required().label('La rue'),
-    city: Joi.string().trim().min(2).max(100).required().label('La ville'),
+    street: plainText('La rue', 3, 200),
+    city: plainText('La ville', 2, 100),
     postalCode: Joi.string()
       .trim()
       .pattern(/^[A-Za-z0-9 -]{3,10}$/)
       .required()
       .label('Le code postal')
       .messages({ 'string.pattern.base': 'Le code postal est invalide.' }),
-    country: Joi.string().trim().min(2).max(100).required().label('Le pays'),
+    country: plainText('Le pays', 2, 100),
   })
     .required()
     .label("L'adresse de livraison"),

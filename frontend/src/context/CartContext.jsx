@@ -1,7 +1,15 @@
+// src/context/CartContext.jsx
 import { createContext, useContext, useReducer } from 'react';
 
 const CartContext = createContext();
 
+/**
+ * Réducteur du panier (articles, livraison, paiement, adresse). Ne modifie jamais l'état existant :
+ * chaque action renvoie un nouvel objet, ce que React exige pour rafraîchir l'affichage.
+ * @param {Object} state État courant du panier
+ * @param {{ type: string, payload: * }} action Action à appliquer
+ * @returns {Object} Nouvel état
+ */
 export const cartReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_TO_CART': {

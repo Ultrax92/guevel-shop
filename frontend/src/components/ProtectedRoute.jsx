@@ -2,6 +2,11 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+/**
+ * Garde de route : réserve la page aux utilisateurs connectés ;
+ * sinon redirige vers /login en mémorisant la page demandée.
+ * @param {{ children: React.ReactNode }} props Page protégée
+ */
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
