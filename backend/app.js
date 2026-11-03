@@ -30,13 +30,16 @@ app.use((req, res, next) => {
 });
 
 // Sonde de supervision : état du service et de la base
+// Un vrai ping (et non readyState) évite les faux "down" au réveil d'une instance serverless
 app.get('/health', async (req, res) => {
+  let dbUp = false;
   try {
     await connectDB();
+    await mongoose.connection.db.admin().command({ ping: 1 });
+    dbUp = true;
   } catch (err) {
-    // l'état "down" est renvoyé ci-dessous
+    logger.warn('Sonde /health : base injoignable', { error: err.message });
   }
-  const dbUp = mongoose.connection.readyState === 1;
   res.status(dbUp ? 200 : 503).json({
     status: dbUp ? 'ok' : 'degraded',
     service: 'backend',
