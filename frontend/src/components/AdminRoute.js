@@ -1,12 +1,14 @@
 // src/components/AdminRoute.js
+// Confort d'affichage uniquement : le contrôle réel du rôle admin est fait par le backend (isAdmin)
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const AdminRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');
+  const { user, loading, isAdmin } = useAuth();
 
-  if (!token || role !== 'admin') {
+  if (loading) return <p className="p-8">Chargement…</p>;
+  if (!user || !isAdmin) {
     return <Navigate to="/" replace />;
   }
 

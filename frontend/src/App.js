@@ -11,6 +11,7 @@ import Admin from './pages/Admin';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import ShippingPayment from './pages/ShippingPayment';
+import { AuthProvider } from './context/AuthContext';
 
 // Layout principal avec Navbar et Outlet
 const MainLayout = () => (
@@ -41,8 +42,9 @@ const router = createBrowserRouter([
         element: <Register />,
       },
       {
-        path: 'shippig_payment',
-        element: <ShippingPayment />,
+        // Typo corrigée (shippig_payment) et page réservée aux utilisateurs connectés
+        path: 'shipping-payment',
+        element: <ProtectedRoute><ShippingPayment /></ProtectedRoute>,
       },
       {
         path: 'cart',
@@ -60,6 +62,10 @@ const router = createBrowserRouter([
   },
 ]);
 
-const App = () => <RouterProvider router={router} />;
+const App = () => (
+  <AuthProvider>
+    <RouterProvider router={router} />
+  </AuthProvider>
+);
 
 export default App;

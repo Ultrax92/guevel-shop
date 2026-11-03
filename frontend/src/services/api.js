@@ -1,14 +1,7 @@
 // src/services/api.js
-import axios from 'axios';
-import { API_BASE_URL } from '../config';
+import http from './http';
 
-export const fetchProducts = () => axios.get(`${API_BASE_URL}/products`);
+export const fetchProducts = () => http.get('/products');
 
-export const createOrder = (orderData) => {
-    const token = localStorage.getItem('token'); // Token de connexion
-    return axios.post(`${API_BASE_URL}/orders`, orderData, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-};
+// Seuls productId et quantity sont envoyés : le prix et le total sont calculés par le serveur
+export const createOrder = (orderData) => http.post('/orders', orderData);

@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { createOrder } from "../services/api";
+import { errorMessage } from "../services/http";
 
 const Order = () => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const Order = () => {
     useCart(); // Récupérer le contenu du panier à partir du contexte
   // Naviguer vers la page de commande
   const handleShippingPage = () => {
-    navigate("/shippig_payment");
+    navigate("/shipping-payment");
   };
 
   const handleSubmit = async (e) => {
@@ -48,14 +49,13 @@ const Order = () => {
     }
 
     try {
-      // Créer la commande seulement si toutes les vérifications passent
+      // Créer la commande seulement si toutes les vérifications passent.
+      // Ni prix ni total ne sont envoyés : le serveur les calcule à partir de sa base (anti-falsification)
       const orderDetails = {
         items: cart.map((item) => ({
           productId: item.id,
           quantity: item.quantity,
-          price: item.price,
         })),
-        total: cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
         shippingAddress,
         paymentMethod,
         shippingMethod,
@@ -63,16 +63,12 @@ const Order = () => {
 
       const response = await createOrder(orderDetails);
 
-      if (response.error) {
-        alert(`Erreur : ${response.message || "Échec de la commande"}`);
-        return;
-      }
-
       dispatch({ type: "CLEAR_CART" });
-      alert("Commande confirmée avec succès !");
+      alert(`Commande confirmée avec succès ! Total : ${response.data.order.total.toFixed(2)} €`);
+      navigate("/");
     } catch (error) {
-      console.error("Erreur lors de la commande", error);
-      alert("Une erreur technique est survenue. Veuillez réessayer.");
+      // Message du serveur (stock insuffisant, données invalides, session expirée…)
+      alert(`Erreur : ${errorMessage(error, "Une erreur technique est survenue. Veuillez réessayer.")}`);
     }
   };
 

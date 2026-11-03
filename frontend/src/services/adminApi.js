@@ -1,89 +1,15 @@
 // src/services/adminApi.js
-import axios from "axios";
-import { API_BASE_URL } from "../config";
+// Appels réservés aux administrateurs (le cookie d'authentification est envoyé automatiquement)
+import http from './http';
 
-export const getOrders = () => {
-  try {
-    const token = localStorage.getItem("token");
-    return axios.get(`${API_BASE_URL}/orders`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch (error) {
-    console.error("Erreur lors de la recupération des commandes :", error);
-    throw error; // Lancer l'erreur pour que le composant puisse la gérer
-  }
-};
+export const getOrders = () => http.get('/orders');
 
-export const getProducts = () => {
-  try {
-    const token = localStorage.getItem("token");
-    return axios.get(`${API_BASE_URL}/products`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch (error) {
-    console.error("Erreur lors de la recupération des produits :", error);
-    throw error; // Lancer l'erreur pour que le composant puisse la gérer
-  }
-};
+export const getProducts = () => http.get('/products');
 
-export const updateOrderStatus = (orderId, status) => {
-  try {
-    const token = localStorage.getItem("token");
-    return axios.put(
-      `${API_BASE_URL}/orders/${orderId}/status`,
-      { status },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-  } catch (error) {
-    console.error(
-      "Erreur lors de la mise à jour du statut de la commande :",
-      error
-    );
-    throw error; // Lancer l'erreur pour que le composant puisse la gérer
-  }
-};
+export const updateOrderStatus = (orderId, status) => http.put(`/orders/${orderId}/status`, { status });
 
-export const validateOrder = (orderId) => {
-  try {
-    const token = localStorage.getItem("token");
-    return axios.put(
-      `${API_BASE_URL}/orders/${orderId}/validate`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-  } catch (error) {
-    console.error("Erreur lors de la validation de la commande :", error);
-    throw error; // Lancer l'erreur pour que le composant puisse la gérer
-  }
-};
+export const validateOrder = (orderId) => http.put(`/orders/${orderId}/validate`);
 
-export const updateProductStock = (productId, stock) => {
-  try {
-    const token = localStorage.getItem("token");
-    return axios.put(
-      `${API_BASE_URL}/products/${productId}/stock`,
-      { stock },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-  } catch (error) {
-    console.error("Erreur lors de la mise à jour du stock :", error);
-    throw error; // Lancer l'erreur pour que le composant puisse la gérer
-  }
-};
+export const deleteOrder = (orderId) => http.delete(`/orders/${orderId}`);
+
+export const updateProductStock = (productId, stock) => http.put(`/products/${productId}/stock`, { stock });

@@ -1,8 +1,7 @@
 // src/pages/Register.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { API_BASE_URL } from '../config';
+import http, { errorMessage } from '../services/http';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -22,13 +21,14 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     try {
-      await axios.post(`${API_BASE_URL}/auth/register`, formData);
+      await http.post('/auth/register', formData);
       alert('Inscription réussie ! Vous pouvez maintenant vous connecter.');
       navigate('/login');
     } catch (err) {
-      // Message renvoyé par le serveur, sinon message générique (erreur réseau)
-      setError(err.response?.data?.message || 'Une erreur est survenue. Veuillez réessayer.');
+      // Message renvoyé par le serveur (détail de la validation), sinon message générique (erreur réseau)
+      setError(errorMessage(err));
     }
   };
 
@@ -36,11 +36,15 @@ const Register = () => {
     <div className="flex justify-center items-center h-screen">
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md w-80">
         <h2 className="text-2xl font-bold mb-4 text-center">Inscription</h2>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+        {error && <p className="text-red-500 mb-4 whitespace-pre-line">{error}</p>}
         <input
           type="text"
           name="username"
           placeholder="Nom d'utilisateur"
+          autoComplete="username"
+          required
+          minLength={3}
+          maxLength={30}
           value={formData.username}
           onChange={handleChange}
           className="border border-gray-300 p-2 w-full mb-4"
@@ -49,6 +53,8 @@ const Register = () => {
           type="email"
           name="email"
           placeholder="Adresse email"
+          autoComplete="email"
+          required
           value={formData.email}
           onChange={handleChange}
           className="border border-gray-300 p-2 w-full mb-4"
@@ -56,7 +62,10 @@ const Register = () => {
         <input
           type="password"
           name="password"
-          placeholder="Mot de passe"
+          placeholder="Mot de passe (8 caractères min., lettre + chiffre)"
+          autoComplete="new-password"
+          required
+          minLength={8}
           value={formData.password}
           onChange={handleChange}
           className="border border-gray-300 p-2 w-full mb-4"

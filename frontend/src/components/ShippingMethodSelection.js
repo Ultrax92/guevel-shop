@@ -18,10 +18,12 @@ import { useCart } from '../context/CartContext';
       </label>
       <select 
         id="shipping" 
-        value={shippingMethod} 
+        value={shippingMethod || ''}
+        required
         onChange={handleShippingChange} 
         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
       >
+        <option value="" disabled>-- Choisissez un transporteur --</option>
         {shippingOptions.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}

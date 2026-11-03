@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import ShippingMethodSelection from '../components/ShippingMethodSelection';
-import PaymentMethodSelection from '../components/handlePaymentChange';
+import PaymentMethodSelection from '../components/PaymentMethodSelection';
 import ShippingAddress from '../components/ShippingAddress';
 
 
