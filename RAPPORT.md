@@ -166,8 +166,10 @@ Sur chaque push et pull request vers `main` / `develop` :
 | 3 | `docker-compose.yml` : ports faux, gateway absent | `docker-compose.yml` | Réécriture complète | ✅ |
 | 4 | Build Vercel en échec (warning ESLint `setError` inutilisé) | `frontend/src/pages/Register.js` | Message d'erreur affiché dans le formulaire | ✅ |
 | 5 | Accès admin et dump absents | `backend/seeder.js` | Création du premier admin à partir des variables d'environnement | ✅ |
-| 6 | Identifiants SMTP fournis refusés par Gmail (`535 BadCredentials`) | configuration | Mot de passe d'application Gmail du candidat, stocké en *Secret* Vercel | ⏳ |
+| 6 | Identifiants SMTP fournis refusés par Gmail (`535 BadCredentials`) | configuration | Mot de passe d'application Gmail du candidat, stocké en *Secret* Vercel ; envoi validé (« Email envoyé avec succès » dans les logs, e-mail reçu) | ✅ |
 | 7 | `/health` : faux « db: down » au réveil d'une instance serverless | `backend/app.js` | `ping` MongoDB réel | ✅ |
+| 8 | CI : job Docker en échec sur les pull requests (tag `2/merge` invalide) | `.github/workflows/ci.yml` | Tag calculé à partir de la branche source, `/` remplacé | ✅ |
+| 9 | Un redéploiement (après changement de variable d'env) était annulé par l'*Ignored Build Step* | `*/vercel.json` | Build forcé lorsqu'il s'agit du même commit | ✅ |
 | … | *(suite en session 2)* | | | |
 
 ---
