@@ -1,4 +1,5 @@
 // backend/controllers/orderController.js
+/** @module backend/controllers/orderController */
 const Order = require('../models/Order');
 const User = require('../models/User');
 const logger = require('../config/logger');
@@ -11,7 +12,7 @@ const STOCK_RELEASED_OR_SHIPPED = ['Expédiée', 'Délivrée', 'Annulée'];
 
 /**
  * Prévient le client par e-mail du nouveau statut de sa commande.
- * @param {import('mongoose').Document} order
+ * @param {Object} order
  */
 const notifyCustomer = async (order) => {
   const customer = await User.findById(order.userId).select('email').lean();
@@ -26,7 +27,7 @@ const notifyCustomer = async (order) => {
 /**
  * Création d'une commande par un utilisateur connecté (données déjà validées par Joi).
  * Le total est calculé côté serveur à partir des prix en base et le stock est réservé de façon atomique.
- * @type {import('express').RequestHandler}
+ * @type {ExpressHandler}
  */
 exports.createOrder = async (req, res) => {
   const { items, shippingAddress, paymentMethod, shippingMethod } = req.body;
@@ -80,7 +81,7 @@ exports.createOrder = async (req, res) => {
 
 /**
  * Suppression d'une commande (admin). Le stock d'une commande non expédiée est restitué.
- * @type {import('express').RequestHandler}
+ * @type {ExpressHandler}
  */
 exports.deleteOrder = async (req, res, next) => {
   try {
@@ -100,7 +101,7 @@ exports.deleteOrder = async (req, res, next) => {
 
 /**
  * Liste des commandes (admin), les plus récentes d'abord, avec le nom des produits.
- * @type {import('express').RequestHandler}
+ * @type {ExpressHandler}
  */
 exports.getOrders = async (req, res, next) => {
   try {
@@ -113,8 +114,8 @@ exports.getOrders = async (req, res, next) => {
 
 /**
  * Change le statut d'une commande (admin). Passer à « Annulée » restitue le stock.
- * @param {import('express').Request} req
- * @param {import('express').Response} res
+ * @param {Object} req
+ * @param {Object} res
  * @param {string} status Nouveau statut (déjà validé)
  */
 const applyStatus = async (req, res, status) => {
@@ -145,7 +146,7 @@ const applyStatus = async (req, res, status) => {
 
 /**
  * Valide une commande en attente (admin) : elle passe « En cours de traitement ».
- * @type {import('express').RequestHandler}
+ * @type {ExpressHandler}
  */
 exports.validateOrder = async (req, res, next) => {
   try {
@@ -157,7 +158,7 @@ exports.validateOrder = async (req, res, next) => {
 
 /**
  * Met à jour le statut d'une commande (admin).
- * @type {import('express').RequestHandler}
+ * @type {ExpressHandler}
  */
 exports.updateOrderStatus = async (req, res, next) => {
   try {

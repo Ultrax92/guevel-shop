@@ -1,4 +1,5 @@
 // backend/routes/orderRoutes.js
+/** @module backend/routes/orderRoutes */
 const express = require('express');
 const {
   createOrder,

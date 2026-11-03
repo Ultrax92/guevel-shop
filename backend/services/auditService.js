@@ -1,4 +1,5 @@
 // services/auditService.js
+/** @module backend/services/auditService */
 // Trace une action sensible dans les logs (Winston) ET dans la collection auditlogs (MongoDB)
 const AuditLog = require('../models/AuditLog');
 const logger = require('../config/logger');

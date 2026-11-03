@@ -1,4 +1,5 @@
 // backend/controllers/authController.js
+/** @module backend/controllers/authController */
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User'); // modèle utilisateur
@@ -23,7 +24,7 @@ const INVALID_CREDENTIALS = 'Identifiants invalides.';
 /**
  * Connexion : vérifie les identifiants, pose le JWT dans un cookie HttpOnly et renvoie le profil public.
  * Ne jamais journaliser de mot de passe, de hash ou de token.
- * @type {import('express').RequestHandler}
+ * @type {ExpressHandler}
  */
 exports.login = async (req, res) => {
   const { username, password } = req.body;
@@ -57,7 +58,7 @@ exports.login = async (req, res) => {
 
 /**
  * Déconnexion : supprime le cookie d'authentification.
- * @type {import('express').RequestHandler}
+ * @type {ExpressHandler}
  */
 exports.logout = (req, res) => {
   res.clearCookie(AUTH_COOKIE, cookieOptions());
@@ -66,7 +67,7 @@ exports.logout = (req, res) => {
 
 /**
  * Profil de l'utilisateur connecté (permet au front de connaître la session sans lire le token).
- * @type {import('express').RequestHandler}
+ * @type {ExpressHandler}
  */
 exports.me = async (req, res) => {
   try {
@@ -81,7 +82,7 @@ exports.me = async (req, res) => {
 
 /**
  * Inscription d'un client (rôle `user` imposé, jamais lu dans la requête).
- * @type {import('express').RequestHandler}
+ * @type {ExpressHandler}
  */
 exports.register = async (req, res) => {
   const { username, email, password } = req.body;

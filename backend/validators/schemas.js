@@ -1,4 +1,5 @@
 // backend/validators/schemas.js
+/** @module backend/validators/schemas */
 // Schémas Joi : contrôle de toutes les données utilisateur avant tout accès à la base.
 // Les types stricts (string, number…) bloquent aussi les injections d'opérateurs MongoDB ({"$ne": null}).
 const Joi = require('joi');

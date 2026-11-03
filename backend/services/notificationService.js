@@ -1,4 +1,5 @@
 // services/notificationService.js
+/** @module backend/services/notificationService */
 // Envoi des notifications via le gateway (URL et clé interne issues des variables d'environnement)
 const axios = require('axios');
 const logger = require('../config/logger');

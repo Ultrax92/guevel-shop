@@ -25,6 +25,8 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run format:check
+      - name: Génération de la documentation (échoue si un commentaire JSDoc est invalide)
+        run: npm run docs
 
   services:
     name: Node - ${{ matrix.service }}

@@ -1,4 +1,5 @@
 // stock-management/app.js
+/** @module microservices/stock-management/app */
 const express = require('express');
 const helmet = require('helmet');
 const logger = require('./lib/logger');

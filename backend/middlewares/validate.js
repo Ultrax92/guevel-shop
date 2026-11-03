@@ -1,4 +1,5 @@
 // backend/middlewares/validate.js
+/** @module backend/middlewares/validate */
 // Middleware générique de validation Joi : renvoie 400 avec des messages lisibles, et nettoie les données reçues
 
 // Messages d'erreur en français pour les règles Joi utilisées
@@ -27,9 +28,9 @@ const messages = {
 /**
  * Valide `req[property]` avec un schéma Joi.
  * Les champs inconnus sont supprimés (ex. un `price` envoyé par le client) et les valeurs sont normalisées.
- * @param {import('joi').ObjectSchema} schema Schéma Joi à appliquer
+ * @param {Object} schema Schéma Joi à appliquer
  * @param {'body'|'params'|'query'} [property='body'] Partie de la requête à valider
- * @returns {import('express').RequestHandler}
+ * @returns {ExpressHandler}
  */
 module.exports =
   (schema, property = 'body') =>

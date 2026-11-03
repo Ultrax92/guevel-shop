@@ -1,4 +1,5 @@
 // backend/middlewares/authMiddleware.js
+/** @module backend/middlewares/authMiddleware */
 const jwt = require('jsonwebtoken');
 const logger = require('../config/logger');
 
@@ -8,7 +9,7 @@ const AUTH_COOKIE = 'token';
 /**
  * Vérifie le JWT (cookie HttpOnly en priorité, en-tête `Authorization: Bearer` pour les clients d'API)
  * et place `{ userId, role }` dans `req.user`.
- * @type {import('express').RequestHandler}
+ * @type {ExpressHandler}
  */
 exports.authenticateToken = (req, res, next) => {
   const token = req.cookies?.[AUTH_COOKIE] || req.headers['authorization']?.split(' ')[1];
@@ -26,7 +27,7 @@ exports.authenticateToken = (req, res, next) => {
 
 /**
  * Autorise uniquement les administrateurs (à placer après `authenticateToken`).
- * @type {import('express').RequestHandler}
+ * @type {ExpressHandler}
  */
 exports.isAdmin = (req, res, next) => {
   if (req.user?.role !== 'admin') return res.status(403).json({ message: 'Accès interdit' });

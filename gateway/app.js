@@ -1,4 +1,5 @@
 // gateway/app.js
+/** @module gateway/app */
 const express = require('express');
 const helmet = require('helmet');
 const logger = require('./lib/logger');

@@ -1,4 +1,5 @@
 // backend/routes/authRoutes.js
+/** @module backend/routes/authRoutes */
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { login, register, logout, me } = require('../controllers/authController');

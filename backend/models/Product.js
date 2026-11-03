@@ -1,4 +1,5 @@
 // backend/models/Product.js
+/** @module backend/models/Product */
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema(

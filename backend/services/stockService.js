@@ -1,10 +1,28 @@
 // services/stockService.js
+/** @module backend/services/stockService */
 // Réservation et restitution atomiques du stock, et événement envoyé au microservice stock-management
 const axios = require('axios');
 const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const logger = require('../config/logger');
 const { sendNotification } = require('./notificationService');
+
+/**
+ * Ligne de panier à réserver.
+ * @typedef {Object} StockLine
+ * @property {string} productId Identifiant du produit
+ * @property {number} quantity Quantité demandée
+ */
+
+/**
+ * Ligne réservée, avec les informations relues en base.
+ * @typedef {Object} ReservedLine
+ * @property {string} productId Identifiant du produit
+ * @property {number} quantity Quantité réservée
+ * @property {number} price Prix unitaire en base (jamais celui du client)
+ * @property {string} name Nom du produit
+ * @property {number} remaining Stock restant après réservation
+ */
 
 const LOW_STOCK_THRESHOLD = Number(process.env.LOW_STOCK_THRESHOLD || 5);
 
@@ -44,8 +62,8 @@ const publishStockEvent = async ({ productId, name, quantity, remaining }) => {
  * Réserve le stock de chaque produit de façon atomique (pas de survente même avec des commandes simultanées)
  * et renvoie les lignes de commande avec le prix lu en base (jamais celui envoyé par le client).
  * En cas d'échec, le stock déjà réservé est restitué.
- * @param {{ productId: string, quantity: number }[]} items
- * @returns {Promise<{ productId: string, quantity: number, price: number, name: string, remaining: number }[]>}
+ * @param {Array.<StockLine>} items
+ * @returns {Promise.<Array.<ReservedLine>>}
  */
 exports.reserveStock = async (items) => {
   // Regroupe les quantités d'un même produit présent plusieurs fois
@@ -82,7 +100,7 @@ exports.reserveStock = async (items) => {
 
 /**
  * Restitue du stock (échec de commande, annulation, suppression).
- * @param {{ productId: string|import('mongoose').Types.ObjectId, quantity: number }[]} items
+ * @param {Array.<StockLine>} items
  */
 exports.releaseStock = async (items) => {
   await Promise.all(

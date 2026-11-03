@@ -1,3 +1,4 @@
+/** @module backend/models/Order */
 const mongoose = require('mongoose');
 
 // Define the schema for individual order items

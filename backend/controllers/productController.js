@@ -1,11 +1,12 @@
 // controllers/productController.js
+/** @module backend/controllers/productController */
 const Product = require('../models/Product');
 const { audit } = require('../services/auditService');
 const { sendNotification } = require('../services/notificationService');
 
 /**
  * Liste publique des produits.
- * @type {import('express').RequestHandler}
+ * @type {ExpressHandler}
  */
 exports.getProducts = async (req, res, next) => {
   try {
@@ -18,7 +19,7 @@ exports.getProducts = async (req, res, next) => {
 
 /**
  * Mise à jour du stock d'un produit (admin, valeur validée par Joi : entier ≥ 0).
- * @type {import('express').RequestHandler}
+ * @type {ExpressHandler}
  */
 exports.updateProductStock = async (req, res, next) => {
   try {

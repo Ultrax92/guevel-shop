@@ -1,4 +1,5 @@
 // routes/productRoutes.js
+/** @module backend/routes/productRoutes */
 const express = require('express');
 const { getProducts, updateProductStock } = require('../controllers/productController');
 const { authenticateToken, isAdmin } = require('../middlewares/authMiddleware');

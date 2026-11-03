@@ -1,4 +1,5 @@
 // backend/models/AuditLog.js
+/** @module backend/models/AuditLog */
 // Journal d'audit persistant : qui a fait quoi, quand, depuis où (conservé 90 jours)
 const mongoose = require('mongoose');
 

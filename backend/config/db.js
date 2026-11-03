@@ -1,4 +1,5 @@
 // config/db.js
+/** @module backend/config/db */
 const mongoose = require('mongoose');
 const logger = require('./logger');
 

@@ -1,4 +1,5 @@
 // notifications/app.js
+/** @module microservices/notifications/app */
 const express = require('express');
 const helmet = require('helmet');
 const nodemailer = require('nodemailer');
