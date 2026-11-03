@@ -27,3 +27,5 @@ data/db/
 
 # Autre
 .DS_Store
+# Secrets par projet Vercel (générés localement)
+.vercel-secrets/
