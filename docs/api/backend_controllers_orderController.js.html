@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: backend/controllers/orderController.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: backend/controllers/orderController.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// backend/controllers/orderController.js
+/** @module backend/controllers/orderController */
+const Order = require('../models/Order');
+const User = require('../models/User');
+const logger = require('../config/logger');
+const { sendNotification } = require('../services/notificationService');
+const { audit } = require('../services/auditService');
+const { reserveStock, releaseStock, publishStockEvent, StockError } = require('../services/stockService');
+
+// Statuts pour lesquels le stock n'est plus « engagé » (la marchandise est partie ou la commande est annulée)
+const STOCK_RELEASED_OR_SHIPPED = ['Expédiée', 'Délivrée', 'Annulée'];
+
+/**
+ * Prévient le client par e-mail du nouveau statut de sa commande.
+ * @param {Object} order
+ */
+const notifyCustomer = async (order) => {
+  const customer = await User.findById(order.userId).select('email').lean();
+  if (!customer) return;
+  await sendNotification({
+    to: customer.email,
+    subject: `Votre commande est "${order.status}"`,
+    text: `Bonjour,\n\nLe statut de votre commande ${order._id} est désormais : ${order.status}.`,
+  });
+};
+
+/**
+ * Création d'une commande par un utilisateur connecté (données déjà validées par Joi).
+ * Le total est calculé côté serveur à partir des prix en base et le stock est réservé de façon atomique.
+ * @type {ExpressHandler}
+ */
+exports.createOrder = async (req, res) => {
+  const { items, shippingAddress, paymentMethod, shippingMethod } = req.body;
+  const userId = req.user.userId;
+
+  let reserved = [];
+  try {
+    reserved = await reserveStock(items);
+
+    const orderItems = reserved.map(({ productId, quantity, price }) => ({ productId, quantity, price }));
+    const total = orderItems.reduce((acc, { price, quantity }) => acc + price * quantity, 0);
+
+    const savedOrder = await Order.create({
+      userId,
+      items: orderItems,
+      total,
+      shippingAddress,
+      paymentMethod,
+      shippingMethod,
+    });
+
+    logger.info('Commande créée', { orderId: savedOrder._id.toString(), userId, total });
+
+    // Appel au micro-service de notification (via le gateway) : destinataire = admin configuré en variable d'env
+    await sendNotification({
+      subject: 'Nouvelle Commande Créée',
+      text: `Une commande a été créée avec succès pour les produits suivants : \n${reserved
+        .map((item) => `${item.name} (ID : ${item.productId}), Quantité : ${item.quantity}`)
+        .join('\n')}\nTotal : ${total} €`,
+    });
+
+    // Appel au micro-service de gestion des stocks
+    await Promise.all(reserved.map(publishStockEvent));
+
+    res.status(201).json({
+      message: 'Commande créée avec succès',
+      order: savedOrder,
+    });
+  } catch (error) {
+    if (error instanceof StockError) {
+      return res.status(error.status).json({ message: error.message });
+    }
+    // Échec après la réservation (ex. écriture de la commande) : on rend le stock
+    await releaseStock(reserved);
+    logger.error('Erreur lors de la création de la commande', { error: error.message });
+    res.status(500).json({
+      message: 'Une erreur est survenue lors de la création de la commande.',
+    });
+  }
+};
+
+/**
+ * Suppression d'une commande (admin). Le stock d'une commande non expédiée est restitué.
+ * @type {ExpressHandler}
+ */
+exports.deleteOrder = async (req, res, next) => {
+  try {
+    const order = await Order.findByIdAndDelete(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Commande non trouvée.' });
+
+    if (!STOCK_RELEASED_OR_SHIPPED.includes(order.status)) {
+      await releaseStock(order.items);
+    }
+
+    await audit(req, 'commande supprimée', { actorId: req.user.userId, details: { orderId: req.params.id } });
+    res.status(200).json({ message: 'Commande supprimée.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Liste des commandes (admin), les plus récentes d'abord, avec le nom des produits.
+ * @type {ExpressHandler}
+ */
+exports.getOrders = async (req, res, next) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 }).populate('items.productId', 'name').lean();
+    res.status(200).json(orders);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Change le statut d'une commande (admin). Passer à « Annulée » restitue le stock.
+ * @param {Object} req
+ * @param {Object} res
+ * @param {string} status Nouveau statut (déjà validé)
+ */
+const applyStatus = async (req, res, status) => {
+  const order = await Order.findById(req.params.id);
+  if (!order) return res.status(404).json({ message: 'Commande non trouvée.' });
+
+  const previous = order.status;
+  if (previous === status) return res.status(200).json({ message: 'Statut inchangé.', order });
+  if (previous === 'Annulée') {
+    return res.status(409).json({ message: 'Une commande annulée ne peut plus changer de statut.' });
+  }
+
+  order.status = status;
+  await order.save();
+
+  if (status === 'Annulée' &amp;&amp; !STOCK_RELEASED_OR_SHIPPED.includes(previous)) {
+    await releaseStock(order.items);
+  }
+
+  await audit(req, 'statut de commande modifié', {
+    actorId: req.user.userId,
+    details: { orderId: req.params.id, from: previous, to: status },
+  });
+  await notifyCustomer(order);
+
+  return res.status(200).json({ message: 'Statut mis à jour avec succès', order });
+};
+
+/**
+ * Valide une commande en attente (admin) : elle passe « En cours de traitement ».
+ * @type {ExpressHandler}
+ */
+exports.validateOrder = async (req, res, next) => {
+  try {
+    await applyStatus(req, res, 'En cours de traitement');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Met à jour le statut d'une commande (admin).
+ * @type {ExpressHandler}
+ */
+exports.updateOrderStatus = async (req, res, next) => {
+  try {
+    await applyStatus(req, res, req.body.status);
+  } catch (error) {
+    next(error);
+  }
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-backend_app.html">backend/app</a></li><li><a href="module-backend_config_db.html">backend/config/db</a></li><li><a href="module-backend_config_logger.html">backend/config/logger</a></li><li><a href="module-backend_controllers_authController.html">backend/controllers/authController</a></li><li><a href="module-backend_controllers_orderController.html">backend/controllers/orderController</a></li><li><a href="module-backend_controllers_productController.html">backend/controllers/productController</a></li><li><a href="module-backend_middlewares_authMiddleware.html">backend/middlewares/authMiddleware</a></li><li><a href="module-backend_middlewares_validate.html">backend/middlewares/validate</a></li><li><a href="module-backend_models_AuditLog.html">backend/models/AuditLog</a></li><li><a href="module-backend_models_Order.html">backend/models/Order</a></li><li><a href="module-backend_models_Product.html">backend/models/Product</a></li><li><a href="module-backend_models_User.html">backend/models/User</a></li><li><a href="module-backend_routes_auditRoutes.html">backend/routes/auditRoutes</a></li><li><a href="module-backend_routes_authRoutes.html">backend/routes/authRoutes</a></li><li><a href="module-backend_routes_orderRoutes.html">backend/routes/orderRoutes</a></li><li><a href="module-backend_routes_productRoutes.html">backend/routes/productRoutes</a></li><li><a href="module-backend_services_auditService.html">backend/services/auditService</a></li><li><a href="module-backend_services_notificationService.html">backend/services/notificationService</a></li><li><a href="module-backend_services_stockService.html">backend/services/stockService</a></li><li><a href="module-backend_types.html">backend/types</a></li><li><a href="module-backend_validators_schemas.html">backend/validators/schemas</a></li><li><a href="module-gateway_app.html">gateway/app</a></li><li><a href="module-gateway_lib_internalAuth.html">gateway/lib/internalAuth</a></li><li><a href="module-gateway_lib_logger.html">gateway/lib/logger</a></li><li><a href="module-gateway_routes_notifi.html">gateway/routes/notifi</a></li><li><a href="module-gateway_routes_stock.html">gateway/routes/stock</a></li><li><a href="module-microservices_notifications_app.html">microservices/notifications/app</a></li><li><a href="module-microservices_notifications_lib_internalAuth.html">microservices/notifications/lib/internalAuth</a></li><li><a href="module-microservices_notifications_lib_logger.html">microservices/notifications/lib/logger</a></li><li><a href="module-microservices_stock-management_app.html">microservices/stock-management/app</a></li><li><a href="module-microservices_stock-management_lib_internalAuth.html">microservices/stock-management/lib/internalAuth</a></li><li><a href="module-microservices_stock-management_lib_logger.html">microservices/stock-management/lib/logger</a></li></ul><h3>Classes</h3><ul><li><a href="module-backend_services_stockService-StockError.html">StockError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Tue Nov 03 2026 13:17:02 GMT+0100 (heure normale d’Europe centrale)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

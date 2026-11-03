@@ -13,7 +13,7 @@ services:
       - mongo-data:/data/db
     # Base non exposée sur l'hôte : accessible uniquement depuis le réseau interne Docker
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,6 +27,8 @@ services:
       MONGO_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo:27017/exam1Db?authSource=admin
       JWT_SECRET: ${JWT_SECRET}
       CORS_ORIGINS: http://localhost:3000
+      # HTTP en local : cookie sans l'attribut Secure (en préprod/prod : HTTPS, Secure actif par défaut)
+      COOKIE_SECURE: 'false'
       GATEWAY_URL: http://gateway:8000
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       ADMIN_EMAIL: ${ADMIN_EMAIL}

@@ -1,4 +1,5 @@
 // config/logger.js
+/** @module backend/config/logger */
 // Logger JSON structuré (Winston) : lisible par Vercel Runtime Logs, Docker et les outils de centralisation
 const { createLogger, format, transports } = require('winston');
 

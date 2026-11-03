@@ -1,6 +1,10 @@
 // config/db.js
+/** @module backend/config/db */
 const mongoose = require('mongoose');
 const logger = require('./logger');
+
+// Défense en profondeur contre l'injection NoSQL : tout objet {"$..."} reçu dans un filtre est neutralisé
+mongoose.set('sanitizeFilter', true);
 
 let connectionPromise = null;
 

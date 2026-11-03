@@ -1,4 +1,5 @@
 // lib/internalAuth.js
+/** @module microservices/stock-management/lib/internalAuth */
 // Seul le gateway (porteur de la clé interne partagée) peut appeler ce microservice
 const crypto = require('crypto');
 const logger = require('./logger');

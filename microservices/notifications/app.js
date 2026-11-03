@@ -1,11 +1,14 @@
 // notifications/app.js
+/** @module microservices/notifications/app */
 const express = require('express');
+const helmet = require('helmet');
 const nodemailer = require('nodemailer');
 const logger = require('./lib/logger');
 const internalAuth = require('./lib/internalAuth');
 
 const app = express();
 app.disable('x-powered-by');
+app.use(helmet());
 app.use(express.json({ limit: '50kb' }));
 
 // Configuration de Nodemailer (identifiants uniquement via variables d'environnement, jamais journalisés)
@@ -19,7 +22,12 @@ const transporter = nodemailer.createTransport({
 
 // Sonde de supervision
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'notifications', env: process.env.APP_ENV || 'local', version: process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7) : 'local' });
+  res.json({
+    status: 'ok',
+    service: 'notifications',
+    env: process.env.APP_ENV || 'local',
+    version: process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7) : 'local',
+  });
 });
 
 // Route pour envoyer un email
@@ -41,8 +49,8 @@ app.post('/notify', internalAuth, async (req, res) => {
     logger.info('Email envoyé avec succès', { subject });
     return res.status(200).json({ message: 'Email envoyé avec succès.' });
   } catch (error) {
-    logger.error('Erreur lors de l\'envoi de l\'email', { subject, error: error.message });
-    return res.status(500).json({ message: 'Erreur lors de l\'envoi de l\'email.' });
+    logger.error("Erreur lors de l'envoi de l'email", { subject, error: error.message });
+    return res.status(500).json({ message: "Erreur lors de l'envoi de l'email." });
   }
 });
 

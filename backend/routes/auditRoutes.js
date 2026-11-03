@@ -1,4 +1,5 @@
 // backend/routes/auditRoutes.js
+/** @module backend/routes/auditRoutes */
 const express = require('express');
 const AuditLog = require('../models/AuditLog');
 const { authenticateToken, isAdmin } = require('../middlewares/authMiddleware');

@@ -1,7 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "create-react-app",
-  "ignoreCommand": "[ -n \"$VERCEL_GIT_PREVIOUS_SHA\" ] && [ \"$VERCEL_GIT_PREVIOUS_SHA\" != \"$VERCEL_GIT_COMMIT_SHA\" ] && git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- .",
+  "framework": "vite",
+  "outputDirectory": "dist",
+  "ignoreCommand": "[ -n \"$VERCEL_GIT_PREVIOUS_SHA\" ] && [ \"$VERCEL_GIT_PREVIOUS_SHA\" != \"$VERCEL_GIT_COMMIT_SHA\" ] && git rev-parse -q --verify \"$VERCEL_GIT_PREVIOUS_SHA^{commit}\" >/dev/null && git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- .",
   "rewrites": [
     {
       "source": "/(.*)",

@@ -1,4 +1,5 @@
 // lib/internalAuth.js
+/** @module gateway/lib/internalAuth */
 // Seuls les services internes (backend) connaissant la clé partagée peuvent appeler le gateway
 const crypto = require('crypto');
 const logger = require('./logger');

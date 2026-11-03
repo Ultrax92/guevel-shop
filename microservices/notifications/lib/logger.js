@@ -1,4 +1,5 @@
 // lib/logger.js
+/** @module microservices/notifications/lib/logger */
 // Logger JSON structuré (Winston) du microservice notifications
 const { createLogger, format, transports } = require('winston');
 

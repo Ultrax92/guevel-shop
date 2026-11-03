@@ -13,6 +13,21 @@ permissions:
   contents: read
 
 jobs:
+  quality:
+    name: Qualité - ESLint et Prettier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - name: Génération de la documentation (échoue si un commentaire JSDoc est invalide)
+        run: npm run docs
+
   services:
     name: Node - ${{ matrix.service }}
     runs-on: ubuntu-latest
@@ -36,8 +51,54 @@ jobs:
       - name: Audit de sécurité des dépendances
         run: npm audit --omit=dev --audit-level=high
 
+  integration:
+    name: Intégration - API + MongoDB (test de fumée)
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:7
+        ports: ['27017:27017']
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      MONGO_URI: mongodb://localhost:27017/exam1_ci
+      APP_ENV: ci
+      PORT: 5000
+      COOKIE_SECURE: 'false'
+      ADMIN_USERNAME: admin
+      ADMIN_EMAIL: admin@example.test
+      LOG_LEVEL: warn
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Secrets éphémères propres au run (jamais versionnés)
+        run: |
+          echo "JWT_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "ADMIN_PASSWORD=Ci-$(openssl rand -hex 12)" >> "$GITHUB_ENV"
+      - run: npm ci
+        working-directory: backend
+      - name: Jeu de données (produits + admin)
+        run: node seeder.js
+        working-directory: backend
+      - name: Démarrage de l'API
+        run: |
+          node server.js > api.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:5000/health && exit 0; sleep 1; done
+          cat api.log; exit 1
+        working-directory: backend
+      - name: Test de fumée (fonctionnel + sécurité)
+        run: |
+          echo "ADMIN_USERNAME=$ADMIN_USERNAME" > ci.env
+          echo "ADMIN_PASSWORD=$ADMIN_PASSWORD" >> ci.env
+          node scripts/smoke-test.js ci.env http://localhost:5000
+
   frontend:
-    name: Frontend - build
+    name: Frontend - tests et build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -50,14 +111,14 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-      - name: Build de production (warnings ESLint bloquants, comme sur Vercel)
+      - name: Tests unitaires (Vitest)
+        run: npm test
+      - name: Build de production (Vite)
         run: npm run build
-        env:
-          CI: true
 
   docker:
     name: Docker - ${{ matrix.image }}
-    needs: [services, frontend]
+    needs: [quality, services, integration, frontend]
     runs-on: ubuntu-latest
     permissions:
       contents: read

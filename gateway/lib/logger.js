@@ -1,4 +1,5 @@
 // lib/logger.js
+/** @module gateway/lib/logger */
 // Logger JSON structuré (Winston) partagé par le gateway
 const { createLogger, format, transports } = require('winston');
 

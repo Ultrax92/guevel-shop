@@ -1,12 +1,13 @@
 // backend/models/User.js
+/** @module backend/models/User */
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
+  username: { type: String, required: true, unique: true, trim: true },
+  email: { type: String, required: true, unique: true, trim: true, lowercase: true },
   password: { type: String, required: true },
-  role: { type: String, default: 'user' }, // Peut être 'user' ou 'admin'
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
 });
 
 // Middleware pour hasher le mot de passe avant sauvegarde

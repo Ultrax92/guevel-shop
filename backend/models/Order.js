@@ -1,3 +1,4 @@
+/** @module backend/models/Order */
 const mongoose = require('mongoose');
 
 // Define the schema for individual order items
@@ -52,17 +53,9 @@ const orderSchema = new mongoose.Schema(
       enum: ['colissimo', 'chronopost'],
       required: true,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   {
-    timestamps: true, // Automatically adds createdAt and updatedAt fields
+    timestamps: true, // Automatically adds createdAt and updatedAt fields (champs manuels en double supprimés)
   }
 );
 
