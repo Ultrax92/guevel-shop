@@ -1,5 +1,10 @@
+// src/components/ShippingMethodSelection.jsx
 import { useCart } from '../context/CartContext';
 
+/**
+ * Choix du transporteur (Colissimo, Chronopost), enregistré dans le panier.
+ * Aucune option n'est présélectionnée : l'utilisateur doit faire un choix explicite.
+ */
 const ShippingMethodSelection = () => {
   const { shippingMethod, dispatch } = useCart();
   const shippingOptions = [
@@ -14,7 +19,7 @@ const ShippingMethodSelection = () => {
   return (
     <div className="border p-4 rounded-md">
       <label htmlFor="shipping" className="block text-sm font-medium text-gray-700">
-        Méthode de livraison:
+        Méthode de livraison :
       </label>
       <select
         id="shipping"

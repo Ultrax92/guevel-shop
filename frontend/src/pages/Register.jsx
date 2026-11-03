@@ -3,6 +3,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import http, { errorMessage } from '../services/http';
 
+/**
+ * Inscription : les règles (identifiant, e-mail, mot de passe) sont vérifiées par le serveur,
+ * dont les messages détaillés sont affichés sous le formulaire.
+ */
 const Register = () => {
   const [formData, setFormData] = useState({
     username: '',

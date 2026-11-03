@@ -1,6 +1,6 @@
 {
   "name": "guevel-shop",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "private": true,
   "description": "Mini site e-commerce MERN : frontend React, API Express, gateway et microservices",
   "scripts": {

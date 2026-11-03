@@ -6,6 +6,7 @@ const User = require('../models/User'); // modèle utilisateur
 const logger = require('../config/logger');
 const { audit } = require('../services/auditService');
 const { AUTH_COOKIE } = require('../middlewares/authMiddleware');
+const { getJwtSecret } = require('../config/secrets');
 
 const TOKEN_TTL_SECONDS = 60 * 60; // 1 h
 
@@ -42,7 +43,7 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: INVALID_CREDENTIALS });
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ userId: user._id, role: user.role }, getJwtSecret(), {
       algorithm: 'HS256',
       expiresIn: TOKEN_TTL_SECONDS,
     });

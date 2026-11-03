@@ -3,6 +3,19 @@
 Toutes les évolutions notables du projet sont consignées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions selon le [versionnage sémantique](https://semver.org/lang/fr/).
 
+## [2.0.2] — 2026-11-03 — Injections HTML/JS, secret JWT et commentaires React
+
+### Sécurité
+- Injections HTML/JS : les champs de l'adresse de livraison refusent `<` et `>`, en plus du nom d'utilisateur alphanumérique, de l'échappement React et des e-mails en texte brut.
+- Le backend refuse de démarrer si `JWT_SECRET` est absent ou fait moins de 32 caractères (`backend/config/secrets.js`). `.env.example` ne contient plus de valeur d'exemple réutilisable.
+
+### Ajouté
+- 2 contrôles au test de fumée (27 au total) : `<script>alert('test')</script>` en nom d'utilisateur et `<img onerror=…>` dans l'adresse doivent être refusés.
+- Bloc de documentation au-dessus de chaque composant React, page et contexte.
+
+### Corrigé
+- Commentaires restés en anglais ou peu clairs dans le frontend ; libellés « Mode de paiement : » et « Méthode de livraison : ».
+
 ## [2.0.1] — 2026-11-03 — Finitions de la page admin
 
 ### Corrigé

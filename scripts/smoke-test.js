@@ -58,6 +58,12 @@ const login = async (username, password) => {
   // --- Inscription et validation des entrées (Joi)
   const weak = await call('POST', '/api/auth/register', { username: 'ab', email: 'pas-un-email', password: '123' });
   check('Inscription invalide refusée (400)', weak.status === 400, (weak.data.details || []).length + ' erreurs');
+  const xssUser = await call('POST', '/api/auth/register', {
+    username: "<script>alert('test')</script>",
+    email: `xss${Date.now()}@example.test`,
+    password: 'Xss-Test-2026',
+  });
+  check("Injection HTML/JS dans le nom d'utilisateur refusée (400)", xssUser.status === 400);
   const username = `smoke${Date.now()}`;
   const password = 'Smoke-Test-2026';
   const reg = await call('POST', '/api/auth/register', { username, email: `${username}@example.test`, password });
@@ -94,6 +100,20 @@ const login = async (username, password) => {
 
   const invalid = await call('POST', '/api/orders', { items: [] }, user.cookie);
   check('Commande invalide refusée (400)', invalid.status === 400);
+  const xssOrder = await call(
+    'POST',
+    '/api/orders',
+    {
+      ...order([{ productId: product._id, quantity: 1 }]),
+      shippingAddress: { ...address, street: '<img src=x onerror="alert(\'test\')">' },
+    },
+    user.cookie
+  );
+  check(
+    "Injection HTML/JS dans l'adresse refusée (400)",
+    xssOrder.status === 400,
+    (xssOrder.data?.details || []).join(' ')
+  );
   const tooMuch = await call('POST', '/api/orders', order([{ productId: product._id, quantity: 100 }]), user.cookie);
   check(
     'Commande au-delà du stock refusée',

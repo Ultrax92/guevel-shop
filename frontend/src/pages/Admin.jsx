@@ -13,6 +13,10 @@ import { errorMessage } from '../services/http';
 // Statuts après lesquels une commande ne peut plus être annulée
 const FINAL_STATUSES = ['Expédiée', 'Délivrée', 'Annulée'];
 
+/**
+ * Page d'administration : liste des commandes (valider, expédier, délivrer, annuler, supprimer, détail)
+ * et mise à jour du stock des produits. Chaque action est contrôlée et auditée par le serveur.
+ */
 const Admin = () => {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);

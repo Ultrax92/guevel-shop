@@ -1,12 +1,17 @@
+// src/pages/Order.jsx
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { createOrder } from '../services/api';
 import { errorMessage } from '../services/http';
 
+/**
+ * Récapitulatif et validation de la commande : vérifie que le panier, l'adresse, la livraison
+ * et le paiement sont renseignés, puis envoie uniquement les identifiants et quantités des produits.
+ */
 const Order = () => {
   const navigate = useNavigate();
-  //recuperer le context panier
-  const { cart, shippingAddress, paymentMethod, shippingMethod, dispatch } = useCart(); // Récupérer le contenu du panier à partir du contexte
+  // Contenu du panier et choix de livraison / paiement, lus dans le contexte
+  const { cart, shippingAddress, paymentMethod, shippingMethod, dispatch } = useCart();
   // Naviguer vers la page de commande
   const handleShippingPage = () => {
     navigate('/shipping-payment');

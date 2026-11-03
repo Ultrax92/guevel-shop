@@ -1,6 +1,11 @@
+// src/components/ShippingAddress.jsx
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 
+/**
+ * Formulaire d'adresse de livraison : chaque saisie est enregistrée dans le panier.
+ * Les champs vides sont signalés à la validation de la commande, puis contrôlés par le serveur.
+ */
 const ShippingAddress = () => {
   const { shippingAddress, dispatch } = useCart();
   const [street, setStreet] = useState(shippingAddress.street || '');
@@ -17,7 +22,7 @@ const ShippingAddress = () => {
         [name]: value,
       },
     });
-    // Update local state for better user experience (optional)
+    // Met aussi à jour l'état local pour un affichage immédiat du champ
     switch (name) {
       case 'street':
         setStreet(value);

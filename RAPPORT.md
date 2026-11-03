@@ -98,19 +98,22 @@ Actions réalisées :
 | Notifications | `notifications.guevel-shop.xyz` | `notifications-preprod.guevel-shop.xyz` |
 | Stock | `stock.guevel-shop.xyz` | `stock-preprod.guevel-shop.xyz` |
 
-- Zone DNS chez Hostinger (serveurs DNS Hostinger conservés), TTL 3600 :
+- Zone DNS chez Hostinger (serveurs DNS Hostinger conservés), TTL 3600. Zone finale :
 
 | Type | Nom | Valeur | Rôle |
 |---|---|---|---|
-| A | `@` | `76.76.21.21` | Domaine racine → réseau Vercel |
-| CNAME | `www` | `cname.vercel-dns.com` | `www` → Vercel (redirection 308 vers la racine) |
-| CNAME | `*` | `cname.vercel-dns.com` | Tous les sous-domaines (api, preprod, gateway…) → Vercel |
+| A | `@` | `216.198.79.1` et `64.29.17.1` | Domaine racine → Vercel (IP recommandées) |
+| CNAME | `www`, `preprod` | `289578b092cc037f.vercel-dns-017.com` | Projet frontend (`www` redirigé en 308 vers la racine) |
+| CNAME | `api`, `api-preprod` | `9956df497d57965b.vercel-dns-017.com` | Projet API |
+| CNAME | `gateway`, `gateway-preprod` | `67f3ae7c2710c50e.vercel-dns-017.com` | Projet gateway |
+| CNAME | `notifications`, `notifications-preprod` | `71772f3b18de3088.vercel-dns-017.com` | Projet notifications |
+| CNAME | `stock`, `stock-preprod` | `1ebf678c758c69d2.vercel-dns-017.com` | Projet stock |
 
   `[capture : session-1/E23-dns-hostinger-1-initial.png, session-1/E23-dns-hostinger-2-final.png, session-1/E23-vercel-domaines-valides.png]`
 - Chaque domaine est rattaché à son projet Vercel ; les domaines de préproduction sont liés à la branche `develop` (*Git branch domain*).
 - **Certificats** : émis automatiquement par Vercel (Let's Encrypt, challenge HTTP-01) pour chaque sous-domaine, renouvellement automatique.
 - **Vérification** (`curl`) : certificat valide (`ssl_verify_result=0`) sur tous les domaines ; `https://www.guevel-shop.xyz` → `308` vers `https://guevel-shop.xyz` ; en-tête HSTS présent. `[capture : session-1/E23-certificat-https.png]`
-- Remarque « DNS Change Recommended » dans Vercel : ce n'est pas une erreur. L'API Vercel renvoie `misconfigured: false` et `ipStatus: optional-change` : les valeurs historiques (`76.76.21.21`, `cname.vercel-dns.com`) restent valides, et Vercel suggère simplement ses nouvelles cibles (IP `216.198.79.1` et CNAME dédié par projet, `*.vercel-dns-017.com`). Évolution possible : remplacer le CNAME générique `*` par un CNAME explicite par sous-domaine. Ça évite aussi qu'un sous-domaine non prévu pointe vers Vercel.
+- **Correction de la zone initiale** : la première configuration (`A @ 76.76.21.21` + CNAME générique `*` vers `cname.vercel-dns.com`) fonctionnait, mais Vercel affichait « DNS Change Recommended » (`ipStatus: optional-change`). Elle a été remplacée par les cibles recommandées : 2 enregistrements A et un CNAME explicite par sous-domaine. Le CNAME générique `*` a été supprimé, si bien qu'un sous-domaine non prévu ne pointe plus vers Vercel. Résultat : « Valid Configuration » sur tous les domaines.
 
 ---
 
@@ -122,10 +125,12 @@ Actions réalisées :
 - Test réalisé : `docker compose up -d --build` → 6 conteneurs démarrés ; parcours complet validé (inscription, connexion user/admin, commande, 403 pour un user sur la liste des commandes, changement de statut par l'admin). `[capture : session-2/E27-E28-test-de-fumee-25-controles.png]` (test de fumée exécuté sur la pile Docker locale)
 
 ### Intégration continue — GitHub Actions (`.github/workflows/ci.yml`)
-Sur chaque push et pull request vers `main` / `develop` :
-1. **Services Node** (matrice ×4) : `npm ci`, chargement de l'application, `npm audit --audit-level=high`.
-2. **Frontend** : build de production en mode CI (warnings ESLint bloquants, comme sur Vercel).
-3. **Docker** (matrice ×5) : build des images, puis publication sur **GHCR** (`ghcr.io/ultrax92/guevel-shop-<service>:<branche>` et `:<sha>`) pour les push.
+Sur chaque push et pull request vers `main` / `develop` (12 jobs) :
+1. **Qualité** : ESLint, Prettier, génération de la documentation JSDoc (échoue si un commentaire est invalide).
+2. **Services Node** (matrice ×4) : `npm ci`, chargement de l'application, `npm audit --omit=dev --audit-level=high`.
+3. **Intégration** : MongoDB 7 lancé comme service, secrets éphémères générés pour le run, jeu de données, démarrage de l'API, puis **test de fumée** fonctionnel et sécurité (27 contrôles).
+4. **Frontend** : tests unitaires Vitest, puis build de production Vite.
+5. **Docker** (matrice ×5) : uniquement si les jobs précédents sont verts ; build des images, puis publication sur **GHCR** (`ghcr.io/ultrax92/guevel-shop-<service>:<branche>` et `:<sha>`) pour les push.
 
 ### Déploiement continu — Vercel
 - `develop` → déploiement automatique en **préproduction** ; `main` → **production**.
@@ -197,7 +202,7 @@ Sur chaque push et pull request vers `main` / `develop` :
 | 24 | Déploiements Vercel en échec (`fatal: bad object`) après un push de plusieurs commits : le dernier commit déployé n'était plus dans le clone partiel | `*/vercel.json` | La règle vérifie que le commit existe (`git rev-parse --verify`), sinon elle reconstruit | ✅ |
 | 25 | Page admin : libellé « Status » en anglais, case « Nouveau stock » trop étroite (texte tronqué), titres de sections incohérents | `Admin.jsx` | Libellés en français, case élargie, titres harmonisés | ✅ |
 
-**Vérification** : test de fumée `scripts/smoke-test.js` (25 contrôles), exécuté en local (Docker) et intégré à la CI avec une vraie base MongoDB ; parcours complet rejoué dans un navigateur (inscription, connexion, panier, livraison, commande, déconnexion). `[capture : session-2/E27-E28-test-de-fumee-25-controles.png, session-2/E27-E29-ci-verte-merge-pr4.png, session-1/E22-prod-administration.png]`
+**Vérification** : test de fumée `scripts/smoke-test.js` (25 contrôles, 27 depuis la 2.0.2 avec les injections HTML/JS), exécuté en local (Docker) et intégré à la CI avec une vraie base MongoDB ; parcours complet rejoué dans un navigateur (inscription, connexion, panier, livraison, commande, déconnexion). `[capture : session-2/E27-E28-test-de-fumee-25-controles.png, session-2/E27-E29-ci-verte-merge-pr4.png, session-1/E22-prod-administration.png]`
 
 ---
 
@@ -216,6 +221,8 @@ Sur chaque push et pull request vers `main` / `develop` :
 | 9 | Secrets journalisés et distribués (session 1) | Fuite de mots de passe, tokens, SMTP | Voir E22 : secrets retirés des logs, régénérés, stockés en *Secret* Vercel | 0 secret dans l'historique Git |
 | 10 | `/notify` ouvert à tous (session 1) | Relais d'e-mails abusif | Clé interne à temps constant entre services | 401 sans clé |
 | 11 | **Dépendances vulnérables** | Exploitation de failles connues | Services Node : `npm audit fix` ; frontend : **migration CRA → Vite** (CRA n'est plus maintenu) | Frontend : **71 vulnérabilités (dont 4 critiques) → 0** ; services : 0 high/critical (contrôle CI) |
+| 12 | **Injection HTML/JS** (`<script>alert('test')</script>`, `<img onerror=…>`) dans les champs libres | XSS stockée : script exécuté chez l'admin qui consulte la commande | Nom d'utilisateur alphanumérique ; adresse refusée si elle contient `<` ou `>` (Joi) ; React échappe tout affichage (aucun `dangerouslySetInnerHTML`) ; e-mails envoyés en texte brut | 2 contrôles du test de fumée : nom d'utilisateur et adresse piégés → 400 |
+| 13 | **Robustesse du `JWT_SECRET`** : secret du sujet faible et distribué, aucun contrôle de longueur | Un secret court se casse par force brute à partir d'un seul token, puis permet de fabriquer un token admin | Secrets régénérés (`openssl rand -hex 32`, 256 bits, différents par environnement) ; `config/secrets.js` : le serveur **refuse de démarrer** si `JWT_SECRET` fait moins de 32 caractères ; algorithme imposé (HS256) | Démarrage avec un secret de 5 caractères → arrêt avec un message explicite |
 
 `[capture : session-2/E28-cookie-httponly-secure-strict.png, session-2/E28-console-document-cookie-vide.png, session-2/E28-localstorage-vide.png, session-2/E28-npm-audit-frontend-0-vulnerabilite.png]`
 
@@ -228,8 +235,9 @@ Remarque sur `connect-flash` (cité dans les consignes) : ce module repose sur d
 ## E29 — Documentation et CHANGELOG
 
 - **Documentation générée à partir du code** : commentaires JSDoc (`@module`, `@param`, `@returns`, `@typedef`) sur tous les fichiers du backend, du gateway et des microservices, puis génération HTML par `npm run docs` (JSDoc), dans [`docs/api`](docs/api/index.html) : 66 pages, une par module, avec le code source annoté. La CI échoue si un commentaire JSDoc est invalide. `[capture : session-2/E29-doc-jsdoc-accueil.png, session-2/E29-doc-jsdoc-stockService.png]`
+- **Composants React commentés** : un bloc de documentation au-dessus de chaque composant, page et contexte (rôle, props, comportement), et les commentaires restés en anglais ont été traduits.
 - **README.md** : architecture, tableau des routes de l'API, démarrage local (Docker ou non), scripts, flux CI/CD, sécurité, supervision.
-- **CHANGELOG.md** au format *Keep a Changelog* et versionnage sémantique : `1.0.0` (version fournie), `1.1.0` (mise en production), `2.0.0` (robustesse, sécurité, documentation), `2.0.1` (finitions de la page admin).
+- **CHANGELOG.md** au format *Keep a Changelog* et versionnage sémantique : `1.0.0` (version fournie), `1.1.0` (mise en production), `2.0.0` (robustesse, sécurité, documentation), `2.0.1` (finitions de la page admin), `2.0.2` (injections HTML/JS, robustesse du `JWT_SECRET`, commentaires React).
 - **Historique Git** lisible : commits conventionnels (`feat`, `fix`, `ci`, `docs`, `style`…) avec description détaillée, formatage isolé dans un commit `style`.
 
 ---

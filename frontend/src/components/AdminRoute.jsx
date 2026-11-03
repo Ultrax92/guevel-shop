@@ -3,6 +3,11 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+/**
+ * Garde de route : affiche la page si l'utilisateur connecté est administrateur,
+ * sinon (visiteur ou simple client) redirige vers l'accueil.
+ * @param {{ children: React.ReactNode }} props Page protégée
+ */
 const AdminRoute = ({ children }) => {
   const { user, loading, isAdmin } = useAuth();
 

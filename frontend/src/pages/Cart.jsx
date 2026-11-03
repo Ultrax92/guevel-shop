@@ -1,6 +1,10 @@
+// src/pages/Cart.jsx
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 
+/**
+ * Panier : modification des quantités, suppression d'articles, total, puis passage à la livraison.
+ */
 const Cart = () => {
   const { cart, dispatch } = useCart();
   const navigate = useNavigate();
