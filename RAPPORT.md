@@ -98,19 +98,22 @@ Actions réalisées :
 | Notifications | `notifications.guevel-shop.xyz` | `notifications-preprod.guevel-shop.xyz` |
 | Stock | `stock.guevel-shop.xyz` | `stock-preprod.guevel-shop.xyz` |
 
-- Zone DNS chez Hostinger (serveurs DNS Hostinger conservés), TTL 3600 :
+- Zone DNS chez Hostinger (serveurs DNS Hostinger conservés), TTL 3600. Zone finale :
 
 | Type | Nom | Valeur | Rôle |
 |---|---|---|---|
-| A | `@` | `76.76.21.21` | Domaine racine → réseau Vercel |
-| CNAME | `www` | `cname.vercel-dns.com` | `www` → Vercel (redirection 308 vers la racine) |
-| CNAME | `*` | `cname.vercel-dns.com` | Tous les sous-domaines (api, preprod, gateway…) → Vercel |
+| A | `@` | `216.198.79.1` et `64.29.17.1` | Domaine racine → Vercel (IP recommandées) |
+| CNAME | `www`, `preprod` | `289578b092cc037f.vercel-dns-017.com` | Projet frontend (`www` redirigé en 308 vers la racine) |
+| CNAME | `api`, `api-preprod` | `9956df497d57965b.vercel-dns-017.com` | Projet API |
+| CNAME | `gateway`, `gateway-preprod` | `67f3ae7c2710c50e.vercel-dns-017.com` | Projet gateway |
+| CNAME | `notifications`, `notifications-preprod` | `71772f3b18de3088.vercel-dns-017.com` | Projet notifications |
+| CNAME | `stock`, `stock-preprod` | `1ebf678c758c69d2.vercel-dns-017.com` | Projet stock |
 
   `[capture : session-1/E23-dns-hostinger-1-initial.png, session-1/E23-dns-hostinger-2-final.png, session-1/E23-vercel-domaines-valides.png]`
 - Chaque domaine est rattaché à son projet Vercel ; les domaines de préproduction sont liés à la branche `develop` (*Git branch domain*).
 - **Certificats** : émis automatiquement par Vercel (Let's Encrypt, challenge HTTP-01) pour chaque sous-domaine, renouvellement automatique.
 - **Vérification** (`curl`) : certificat valide (`ssl_verify_result=0`) sur tous les domaines ; `https://www.guevel-shop.xyz` → `308` vers `https://guevel-shop.xyz` ; en-tête HSTS présent. `[capture : session-1/E23-certificat-https.png]`
-- Remarque « DNS Change Recommended » dans Vercel : ce n'est pas une erreur. L'API Vercel renvoie `misconfigured: false` et `ipStatus: optional-change` : les valeurs historiques (`76.76.21.21`, `cname.vercel-dns.com`) restent valides, et Vercel suggère simplement ses nouvelles cibles (IP `216.198.79.1` et CNAME dédié par projet, `*.vercel-dns-017.com`). Évolution possible : remplacer le CNAME générique `*` par un CNAME explicite par sous-domaine. Ça évite aussi qu'un sous-domaine non prévu pointe vers Vercel.
+- **Correction de la zone initiale** : la première configuration (`A @ 76.76.21.21` + CNAME générique `*` vers `cname.vercel-dns.com`) fonctionnait, mais Vercel affichait « DNS Change Recommended » (`ipStatus: optional-change`). Elle a été remplacée par les cibles recommandées : 2 enregistrements A et un CNAME explicite par sous-domaine. Le CNAME générique `*` a été supprimé, si bien qu'un sous-domaine non prévu ne pointe plus vers Vercel. Résultat : « Valid Configuration » sur tous les domaines.
 
 ---
 
@@ -122,10 +125,12 @@ Actions réalisées :
 - Test réalisé : `docker compose up -d --build` → 6 conteneurs démarrés ; parcours complet validé (inscription, connexion user/admin, commande, 403 pour un user sur la liste des commandes, changement de statut par l'admin). `[capture : session-2/E27-E28-test-de-fumee-25-controles.png]` (test de fumée exécuté sur la pile Docker locale)
 
 ### Intégration continue — GitHub Actions (`.github/workflows/ci.yml`)
-Sur chaque push et pull request vers `main` / `develop` :
-1. **Services Node** (matrice ×4) : `npm ci`, chargement de l'application, `npm audit --audit-level=high`.
-2. **Frontend** : build de production en mode CI (warnings ESLint bloquants, comme sur Vercel).
-3. **Docker** (matrice ×5) : build des images, puis publication sur **GHCR** (`ghcr.io/ultrax92/guevel-shop-<service>:<branche>` et `:<sha>`) pour les push.
+Sur chaque push et pull request vers `main` / `develop` (12 jobs) :
+1. **Qualité** : ESLint, Prettier, génération de la documentation JSDoc (échoue si un commentaire est invalide).
+2. **Services Node** (matrice ×4) : `npm ci`, chargement de l'application, `npm audit --omit=dev --audit-level=high`.
+3. **Intégration** : MongoDB 7 lancé comme service, secrets éphémères générés pour le run, jeu de données, démarrage de l'API, puis **test de fumée** fonctionnel et sécurité (27 contrôles).
+4. **Frontend** : tests unitaires Vitest, puis build de production Vite.
+5. **Docker** (matrice ×5) : uniquement si les jobs précédents sont verts ; build des images, puis publication sur **GHCR** (`ghcr.io/ultrax92/guevel-shop-<service>:<branche>` et `:<sha>`) pour les push.
 
 ### Déploiement continu — Vercel
 - `develop` → déploiement automatique en **préproduction** ; `main` → **production**.
