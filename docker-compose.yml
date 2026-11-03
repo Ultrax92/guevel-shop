@@ -1,32 +1,86 @@
-version: '3'
+# Environnement conteneurisé complet (local / recette).
+# Usage : cp .env.example .env  (puis renseigner les valeurs)  &&  docker compose up -d --build
+name: exam1
+
 services:
-  frontend:
-    build: ./frontend
-    ports:
-      - '3000:3000'
-    depends_on:
-      - backend
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
+    # Base non exposée sur l'hôte : accessible uniquement depuis le réseau interne Docker
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-docker}
+      PORT: 5000
+      MONGO_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo:27017/exam1Db?authSource=admin
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGINS: http://localhost:3000
+      GATEWAY_URL: http://gateway:8000
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     ports:
       - '5000:5000'
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/mydatabase
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
 
-  mongo:
-    image: mongo
+  gateway:
+    build: ./gateway
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-docker}
+      GATEWAY_PORT: 8000
+      NOTIFI_SERVICE_URL: http://notifications:4002
+      STOCK_SERVICE_URL: http://stock-management:4003
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
     ports:
-      - '27018:27017'
+      - '8000:8000'
+    depends_on:
+      - notifications
+      - stock-management
 
   notifications:
     build: ./microservices/notifications
-    ports:
-      - '3001:3001'
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-docker}
+      NOTIFI_PORT: 4002
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_APPLICATION_PASSWORD: ${EMAIL_APPLICATION_PASSWORD}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
 
   stock-management:
     build: ./microservices/stock-management
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-docker}
+      STOCK_PORT: 4003
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: http://localhost:5000/api
+    restart: unless-stopped
     ports:
-      - '3002:3002'
+      - '3000:80'
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
