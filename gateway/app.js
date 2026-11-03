@@ -1,13 +1,14 @@
 // gateway/app.js
 const express = require('express');
+const helmet = require('helmet');
 const logger = require('./lib/logger');
 const internalAuth = require('./lib/internalAuth');
-//const authProxy = require('./routes/auth');
 const notifiProxy = require('./routes/notifi');
 const stockProxy = require('./routes/stock');
 
 const app = express();
 app.disable('x-powered-by');
+app.use(helmet());
 
 // Journalisation de chaque requête relayée
 app.use((req, res, next) => {
@@ -24,7 +25,6 @@ app.get('/health', (req, res) => {
 });
 
 // Routes principales pour chaque microservice (le corps est relayé tel quel, sans parsing)
-//app.use('/auth', authProxy);
 app.use('/notify', internalAuth, notifiProxy);
 app.use('/update-stock', internalAuth, stockProxy);
 

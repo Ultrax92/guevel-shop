@@ -1,6 +1,8 @@
 // app.js
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const logger = require('./config/logger');
@@ -14,8 +16,12 @@ app.set('trust proxy', 1);
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
   .split(',')
   .map((origin) => origin.trim());
-app.use(cors({ origin: allowedOrigins }));
+// En-têtes de sécurité HTTP (HSTS, nosniff, frameguard, CSP minimale pour une API JSON…)
+app.use(helmet());
+// credentials: true -> le navigateur envoie le cookie HttpOnly d'authentification
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json({ limit: '100kb' }));
+app.use(cookieParser());
 
 // Journalisation de chaque requête HTTP (sans corps ni en-têtes sensibles)
 app.use((req, res, next) => {

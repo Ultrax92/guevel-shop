@@ -1,11 +1,13 @@
 // notifications/app.js
 const express = require('express');
+const helmet = require('helmet');
 const nodemailer = require('nodemailer');
 const logger = require('./lib/logger');
 const internalAuth = require('./lib/internalAuth');
 
 const app = express();
 app.disable('x-powered-by');
+app.use(helmet());
 app.use(express.json({ limit: '50kb' }));
 
 // Configuration de Nodemailer (identifiants uniquement via variables d'environnement, jamais journalisés)
