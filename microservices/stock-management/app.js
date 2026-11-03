@@ -9,7 +9,7 @@ app.use(express.json({ limit: '50kb' }));
 
 // Sonde de supervision
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'stock-management', env: process.env.APP_ENV || 'local' });
+  res.json({ status: 'ok', service: 'stock-management', env: process.env.APP_ENV || 'local', version: process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7) : 'local' });
 });
 
 app.post('/update-stock', internalAuth, (req, res) => {

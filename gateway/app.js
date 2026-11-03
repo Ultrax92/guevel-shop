@@ -20,7 +20,7 @@ app.use((req, res, next) => {
 
 // Sonde de supervision
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'gateway', env: process.env.APP_ENV || 'local' });
+  res.json({ status: 'ok', service: 'gateway', env: process.env.APP_ENV || 'local', version: process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7) : 'local' });
 });
 
 // Routes principales pour chaque microservice (le corps est relayé tel quel, sans parsing)
