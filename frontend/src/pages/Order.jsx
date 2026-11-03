@@ -1,16 +1,15 @@
-import { useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { createOrder } from "../services/api";
-import { errorMessage } from "../services/http";
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { createOrder } from '../services/api';
+import { errorMessage } from '../services/http';
 
 const Order = () => {
   const navigate = useNavigate();
   //recuperer le context panier
-  const { cart, shippingAddress, paymentMethod, shippingMethod, dispatch } =
-    useCart(); // Récupérer le contenu du panier à partir du contexte
+  const { cart, shippingAddress, paymentMethod, shippingMethod, dispatch } = useCart(); // Récupérer le contenu du panier à partir du contexte
   // Naviguer vers la page de commande
   const handleShippingPage = () => {
-    navigate("/shipping-payment");
+    navigate('/shipping-payment');
   };
 
   const handleSubmit = async (e) => {
@@ -18,32 +17,22 @@ const Order = () => {
 
     // Vérifier les champs manquants
     const missingFields = [];
-    if (cart.length === 0) missingFields.push("panier");
-    if (!shippingAddress) missingFields.push("adresse de livraison");
-    if (!shippingMethod) missingFields.push("méthode de livraison");
-    if (!paymentMethod) missingFields.push("méthode de paiement");
+    if (cart.length === 0) missingFields.push('panier');
+    if (!shippingAddress) missingFields.push('adresse de livraison');
+    if (!shippingMethod) missingFields.push('méthode de livraison');
+    if (!paymentMethod) missingFields.push('méthode de paiement');
 
     if (missingFields.length > 0) {
-      alert(
-        `Informations manquantes pour la commande :\n${missingFields
-          .map((field) => `• ${field}`)
-          .join("\n")}`
-      );
+      alert(`Informations manquantes pour la commande :\n${missingFields.map((field) => `• ${field}`).join('\n')}`);
       return;
     }
 
     // Vérifier le détail de l'adresse de livraison
-    const requiredAddressFields = ["street", "postalCode", "city", "country"];
-    const missingAddressDetails = requiredAddressFields.filter(
-      (field) => !shippingAddress[field]
-    );
+    const requiredAddressFields = ['street', 'postalCode', 'city', 'country'];
+    const missingAddressDetails = requiredAddressFields.filter((field) => !shippingAddress[field]);
 
     if (missingAddressDetails.length > 0) {
-      alert(
-        `Adresse de livraison incomplète :\n${missingAddressDetails
-          .map((field) => `• ${field}`)
-          .join("\n")}`
-      );
+      alert(`Adresse de livraison incomplète :\n${missingAddressDetails.map((field) => `• ${field}`).join('\n')}`);
       return;
     }
 
@@ -62,12 +51,12 @@ const Order = () => {
 
       const response = await createOrder(orderDetails);
 
-      dispatch({ type: "CLEAR_CART" });
+      dispatch({ type: 'CLEAR_CART' });
       alert(`Commande confirmée avec succès ! Total : ${response.data.order.total.toFixed(2)} €`);
-      navigate("/");
+      navigate('/');
     } catch (error) {
       // Message du serveur (stock insuffisant, données invalides, session expirée…)
-      alert(`Erreur : ${errorMessage(error, "Une erreur technique est survenue. Veuillez réessayer.")}`);
+      alert(`Erreur : ${errorMessage(error, 'Une erreur technique est survenue. Veuillez réessayer.')}`);
     }
   };
 
@@ -83,9 +72,7 @@ const Order = () => {
               <tr>
                 <th className="border border-gray-300 p-2">Produit(s)</th>
                 <th className="border border-gray-300 p-2">Quantité(s)</th>
-                <th className="border border-gray-300 p-2">
-                  Prix Unitaire (€)
-                </th>
+                <th className="border border-gray-300 p-2">Prix Unitaire (€)</th>
                 <th className="border border-gray-300 p-2">Prix Total (€)</th>
               </tr>
             </thead>
@@ -93,33 +80,21 @@ const Order = () => {
               {cart.map((item) => (
                 <tr key={item.id}>
                   <td className="border border-gray-300 p-2">{item.name}</td>
-                  <td className="border border-gray-300 p-2 text-center">
-                    {item.quantity}
-                  </td>
-                  <td className="border border-gray-300 p-2 text-center">
-                    {item.price.toFixed(2)}
-                  </td>
-                  <td className="border border-gray-300 p-2 text-center">
-                    {(item.price * item.quantity).toFixed(2)}
-                  </td>
+                  <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
+                  <td className="border border-gray-300 p-2 text-center">{item.price.toFixed(2)}</td>
+                  <td className="border border-gray-300 p-2 text-center">{(item.price * item.quantity).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           <p className="text-right font-bold text-lg mt-4">
-            Total :{" "}
-            {cart
-              .reduce((acc, item) => acc + item.price * item.quantity, 0)
-              .toFixed(2)}{" "}
-            €
+            Total : {cart.reduce((acc, item) => acc + item.price * item.quantity, 0).toFixed(2)} €
           </p>
 
           {/* Nouvelles informations ajoutées ici */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h3 className="text-lg font-semibold mb-2">
-                Adresse de livraison
-              </h3>
+              <h3 className="text-lg font-semibold mb-2">Adresse de livraison</h3>
               {shippingAddress ? (
                 <>
                   <div className="bg-gray-50 p-4 rounded">
@@ -131,58 +106,39 @@ const Order = () => {
                   </div>
                   <div>
                     <div>
-                      <button
-                        onClick={handleShippingPage}
-                        className="bg-blue-500 text-white px-4 py-2 rounded"
-                      >
+                      <button onClick={handleShippingPage} className="bg-blue-500 text-white px-4 py-2 rounded">
                         Modifier
                       </button>
                     </div>
                   </div>
                 </>
               ) : (
-                <p className="text-gray-500">
-                  Aucune adresse de livraison fournie.
-                </p>
+                <p className="text-gray-500">Aucune adresse de livraison fournie.</p>
               )}
             </div>
 
             <div>
               <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-2">
-                  Méthode de livraison
-                </h3>
-                <div className="bg-gray-50 p-4 rounded">
-                  {shippingMethod || "Non spécifiée"}
-                </div>
+                <h3 className="text-lg font-semibold mb-2">Méthode de livraison</h3>
+                <div className="bg-gray-50 p-4 rounded">{shippingMethod || 'Non spécifiée'}</div>
               </div>
 
               <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-2">
-                  Méthode de paiement
-                </h3>
-                <div className="bg-gray-50 p-4 rounded">
-                  {paymentMethod || "Non spécifiée"}
-                </div>
+                <h3 className="text-lg font-semibold mb-2">Méthode de paiement</h3>
+                <div className="bg-gray-50 p-4 rounded">{paymentMethod || 'Non spécifiée'}</div>
               </div>
               <div>
-                    <div>
-                      <button
-                        onClick={handleShippingPage}
-                        className="bg-blue-500 text-white px-4 py-2 rounded"
-                      >
-                        Modifier
-                      </button>
-                    </div>
-                  </div>
+                <div>
+                  <button onClick={handleShippingPage} className="bg-blue-500 text-white px-4 py-2 rounded">
+                    Modifier
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="flex justify-end mt-4">
-            <button
-              onClick={handleSubmit}
-              className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
-            >
+            <button onClick={handleSubmit} className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
               Confirmer la commande
             </button>
           </div>

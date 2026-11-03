@@ -45,7 +45,7 @@ const products = [
 const seedAdmin = async () => {
   const { ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
   if (!ADMIN_USERNAME || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
-    console.log('ADMIN_USERNAME / ADMIN_EMAIL / ADMIN_PASSWORD absents : pas de création d\'admin');
+    console.log("ADMIN_USERNAME / ADMIN_EMAIL / ADMIN_PASSWORD absents : pas de création d'admin");
     return;
   }
 

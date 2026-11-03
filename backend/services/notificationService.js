@@ -14,6 +14,6 @@ exports.sendNotification = async ({ to, subject, text }) => {
     logger.info('Notification envoyée', { subject });
   } catch (error) {
     // Une notification en échec ne doit pas faire échouer l'action métier
-    logger.error('Échec de l\'envoi de la notification', { subject, error: error.message });
+    logger.error("Échec de l'envoi de la notification", { subject, error: error.message });
   }
 };

@@ -5,7 +5,7 @@ import { CartProvider } from './context/CartContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-    <CartProvider>
+  <CartProvider>
     <App />
-    </CartProvider>
+  </CartProvider>
 );

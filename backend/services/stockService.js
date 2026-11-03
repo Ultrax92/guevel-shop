@@ -68,7 +68,7 @@ exports.reserveStock = async (items) => {
         const exists = await Product.exists({ _id: productId });
         throw exists
           ? new StockError(409, 'Stock insuffisant pour un des produits du panier.')
-          : new StockError(404, 'Un des produits du panier n\'existe plus.');
+          : new StockError(404, "Un des produits du panier n'existe plus.");
       }
 
       reserved.push({ productId, quantity, price: product.price, name: product.name, remaining: product.stock });

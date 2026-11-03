@@ -27,20 +27,23 @@ exports.updateProductStock = async (req, res, next) => {
 
     const product = await Product.findById(productId);
     if (!product) {
-      return res.status(404).json({ message: "Produit non trouvé." });
+      return res.status(404).json({ message: 'Produit non trouvé.' });
     }
 
     const previous = product.stock;
     product.stock = stock;
     await product.save();
 
-    await audit(req, 'stock produit modifié', { actorId: req.user.userId, details: { productId, from: previous, to: stock } });
+    await audit(req, 'stock produit modifié', {
+      actorId: req.user.userId,
+      details: { productId, from: previous, to: stock },
+    });
     await sendNotification({
       subject: 'Mise à jour du stock',
       text: `Le stock du produit "${product.name}" est passé de ${previous} à ${stock}.`,
     });
 
-    res.json({ message: "Stock mis à jour avec succès.", product });
+    res.json({ message: 'Stock mis à jour avec succès.', product });
   } catch (error) {
     next(error);
   }

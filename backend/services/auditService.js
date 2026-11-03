@@ -11,6 +11,6 @@ exports.audit = async (req, action, { level = 'info', actorId, username, details
     await AuditLog.create(entry);
   } catch (error) {
     // L'échec d'écriture de l'audit ne doit pas bloquer l'action métier
-    logger.error('Écriture du journal d\'audit impossible', { action, error: error.message });
+    logger.error("Écriture du journal d'audit impossible", { action, error: error.message });
   }
 };

@@ -62,10 +62,7 @@ const Cart = () => {
                   <td className="border border-gray-300 p-2">{item.name}</td>
                   <td className="border border-gray-300 p-2">{item.price}</td>
                   <td className="border border-gray-300 p-2 flex items-center justify-center">
-                    <button
-                      onClick={() => decrementQuantity(item.id)}
-                      className="bg-gray-300 px-2 py-1 rounded-l"
-                    >
+                    <button onClick={() => decrementQuantity(item.id)} className="bg-gray-300 px-2 py-1 rounded-l">
                       -
                     </button>
                     <input
@@ -74,21 +71,13 @@ const Cart = () => {
                       readOnly
                       className="text-center w-12 border border-gray-300 mx-1"
                     />
-                    <button
-                      onClick={() => incrementQuantity(item.id)}
-                      className="bg-gray-300 px-2 py-1 rounded-r"
-                    >
+                    <button onClick={() => incrementQuantity(item.id)} className="bg-gray-300 px-2 py-1 rounded-r">
                       +
                     </button>
                   </td>
+                  <td className="border border-gray-300 p-2">{(item.price * item.quantity).toFixed(2)}</td>
                   <td className="border border-gray-300 p-2">
-                    {(item.price * item.quantity).toFixed(2)}
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    <button
-                      onClick={() => handleRemove(item.id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded"
-                    >
+                    <button onClick={() => handleRemove(item.id)} className="bg-red-500 text-white px-2 py-1 rounded">
                       Retirer
                     </button>
                   </td>
@@ -97,23 +86,13 @@ const Cart = () => {
             </tbody>
           </table>
           <p className="text-right font-bold text-lg mt-4">
-            Total :{' '}
-            {cart
-              .reduce((acc, item) => acc + item.price * item.quantity, 0)
-              .toFixed(2)}{' '}
-            €
+            Total : {cart.reduce((acc, item) => acc + item.price * item.quantity, 0).toFixed(2)} €
           </p>
           <div className="flex space-x-4 mt-4">
-            <button
-              onClick={clearCart}
-              className="bg-red-500 text-white px-4 py-2 rounded"
-            >
+            <button onClick={clearCart} className="bg-red-500 text-white px-4 py-2 rounded">
               Vider le panier
             </button>
-            <button
-              onClick={handleSubmitOrder}
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-            >
+            <button onClick={handleSubmitOrder} className="bg-blue-500 text-white px-4 py-2 rounded">
               Passer une commande
             </button>
           </div>

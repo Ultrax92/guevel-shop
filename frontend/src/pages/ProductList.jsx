@@ -18,7 +18,7 @@ const ProductList = () => {
   const addToCart = (product) => {
     dispatch({
       type: 'ADD_TO_CART',
-      payload: { ...product, id:product._id, quantity: 1 }, // Ajoute +1 à la quantité
+      payload: { ...product, id: product._id, quantity: 1 }, // Ajoute +1 à la quantité
     });
   };
 
@@ -32,7 +32,9 @@ const ProductList = () => {
             <h3 className="text-lg font-semibold">{product.name}</h3>
             <p className="text-sm text-gray-600">{product.description}</p>
             <p className="text-gray-500">{product.price} €</p>
-            <p className="text-xs text-gray-400">{product.stock > 0 ? `${product.stock} en stock` : 'Rupture de stock'}</p>
+            <p className="text-xs text-gray-400">
+              {product.stock > 0 ? `${product.stock} en stock` : 'Rupture de stock'}
+            </p>
             <button
               onClick={() => addToCart(product)}
               disabled={product.stock <= 0}

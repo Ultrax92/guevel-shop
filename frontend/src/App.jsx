@@ -43,7 +43,11 @@ const router = createBrowserRouter([
       {
         // Typo corrigée (shippig_payment) et page réservée aux utilisateurs connectés
         path: 'shipping-payment',
-        element: <ProtectedRoute><ShippingPayment /></ProtectedRoute>,
+        element: (
+          <ProtectedRoute>
+            <ShippingPayment />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'cart',
@@ -51,11 +55,19 @@ const router = createBrowserRouter([
       },
       {
         path: 'order',
-        element: <ProtectedRoute><Order /></ProtectedRoute>,
+        element: (
+          <ProtectedRoute>
+            <Order />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'admin',
-        element: <AdminRoute><Admin /></AdminRoute>,
+        element: (
+          <AdminRoute>
+            <Admin />
+          </AdminRoute>
+        ),
       },
     ],
   },

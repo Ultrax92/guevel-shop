@@ -11,7 +11,12 @@ app.use(express.json({ limit: '50kb' }));
 
 // Sonde de supervision
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'stock-management', env: process.env.APP_ENV || 'local', version: process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7) : 'local' });
+  res.json({
+    status: 'ok',
+    service: 'stock-management',
+    env: process.env.APP_ENV || 'local',
+    version: process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7) : 'local',
+  });
 });
 
 // Reçoit les mouvements de stock publiés par le backend (source de vérité : la base produits)

@@ -1,5 +1,5 @@
 // src/pages/Admin.js
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   getOrders,
   updateOrderStatus,
@@ -7,11 +7,11 @@ import {
   deleteOrder,
   getProducts,
   updateProductStock,
-} from "../services/adminApi";
-import { errorMessage } from "../services/http";
+} from '../services/adminApi';
+import { errorMessage } from '../services/http';
 
 // Statuts après lesquels une commande ne peut plus être annulée
-const FINAL_STATUSES = ["Expédiée", "Délivrée", "Annulée"];
+const FINAL_STATUSES = ['Expédiée', 'Délivrée', 'Annulée'];
 
 const Admin = () => {
   const [orders, setOrders] = useState([]);
@@ -20,7 +20,7 @@ const Admin = () => {
   const [loadingOrder, setLoadingOrder] = useState(null);
   const [newStock, setNewStock] = useState({}); // Stock temporaire par produit
   const [updatingStock, setUpdatingStock] = useState(null); // Stock en cours de mise à jour
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,26 +49,30 @@ const Admin = () => {
       if (response.data.order) replaceOrder(response.data.order);
       alert(successMessage);
     } catch (err) {
-      alert(errorMessage(err, "Erreur lors de la mise à jour de la commande."));
+      alert(errorMessage(err, 'Erreur lors de la mise à jour de la commande.'));
     } finally {
       setLoadingOrder(null); // Désactive le loader
     }
   };
 
   const handleOrderStatusChange = (orderId, newStatus) =>
-    runOrderAction(orderId, () => updateOrderStatus(orderId, newStatus), `Statut de la commande ${orderId} mis à jour en "${newStatus}".`);
+    runOrderAction(
+      orderId,
+      () => updateOrderStatus(orderId, newStatus),
+      `Statut de la commande ${orderId} mis à jour en "${newStatus}".`
+    );
 
   const handleOrderValidation = (orderId) =>
     runOrderAction(orderId, () => validateOrder(orderId), `Commande ${orderId} validée.`);
 
   const handleOrderDeletion = async (orderId) => {
-    if (!window.confirm("Supprimer définitivement cette commande ?")) return;
+    if (!window.confirm('Supprimer définitivement cette commande ?')) return;
     setLoadingOrder(orderId);
     try {
       await deleteOrder(orderId);
       setOrders((prevOrders) => prevOrders.filter((order) => order._id !== orderId));
     } catch (err) {
-      alert(errorMessage(err, "Erreur lors de la suppression de la commande."));
+      alert(errorMessage(err, 'Erreur lors de la suppression de la commande.'));
     } finally {
       setLoadingOrder(null);
     }
@@ -78,8 +82,8 @@ const Admin = () => {
     const stockValue = newStock[productId]; // Récupère la valeur saisie pour ce produit
 
     // 0 est une valeur valide (rupture de stock) : seul un champ vide ou négatif est refusé
-    if (stockValue === undefined || stockValue === "" || Number(stockValue) < 0) {
-      alert("Veuillez entrer une quantité de stock valide.");
+    if (stockValue === undefined || stockValue === '' || Number(stockValue) < 0) {
+      alert('Veuillez entrer une quantité de stock valide.');
       return;
     }
 
@@ -94,9 +98,9 @@ const Admin = () => {
       );
 
       // Réinitialisation du champ
-      setNewStock({ ...newStock, [productId]: "" });
+      setNewStock({ ...newStock, [productId]: '' });
     } catch (err) {
-      alert(errorMessage(err, "Échec de la mise à jour du stock."));
+      alert(errorMessage(err, 'Échec de la mise à jour du stock.'));
     } finally {
       setUpdatingStock(null); // Désactive le loader
     }
@@ -117,12 +121,12 @@ const Admin = () => {
                 <strong>ID :</strong> {order._id}
               </p>
               <p>
-                <strong>Date :</strong> {new Date(order.createdAt).toLocaleString("fr-FR")}
+                <strong>Date :</strong> {new Date(order.createdAt).toLocaleString('fr-FR')}
               </p>
               <p>
                 <strong>Status :</strong> {order.status}
               </p>
-              {order.status === "En attente" && (
+              {order.status === 'En attente' && (
                 <button
                   onClick={() => handleOrderValidation(order._id)}
                   className="bg-green-500 text-white px-2 py-1 mt-2 rounded mr-2"
@@ -134,19 +138,17 @@ const Admin = () => {
 
               {!FINAL_STATUSES.includes(order.status) && (
                 <button
-                  onClick={() => handleOrderStatusChange(order._id, "Expédiée")}
+                  onClick={() => handleOrderStatusChange(order._id, 'Expédiée')}
                   className="bg-blue-500 text-white px-2 py-1 mt-2 rounded mr-2"
                   disabled={loadingOrder === order._id}
                 >
-                  {loadingOrder === order._id
-                    ? "Mise à jour..."
-                    : 'Changer état à "Expédiée"'}
+                  {loadingOrder === order._id ? 'Mise à jour...' : 'Changer état à "Expédiée"'}
                 </button>
               )}
 
-              {order.status === "Expédiée" && (
+              {order.status === 'Expédiée' && (
                 <button
-                  onClick={() => handleOrderStatusChange(order._id, "Délivrée")}
+                  onClick={() => handleOrderStatusChange(order._id, 'Délivrée')}
                   className="bg-blue-700 text-white px-2 py-1 mt-2 rounded mr-2"
                   disabled={loadingOrder === order._id}
                 >
@@ -156,7 +158,7 @@ const Admin = () => {
 
               {!FINAL_STATUSES.includes(order.status) && (
                 <button
-                  onClick={() => handleOrderStatusChange(order._id, "Annulée")}
+                  onClick={() => handleOrderStatusChange(order._id, 'Annulée')}
                   className="bg-yellow-500 text-white px-2 py-1 mt-2 rounded mr-2"
                   disabled={loadingOrder === order._id}
                 >
@@ -207,7 +209,7 @@ const Admin = () => {
                     placeholder="Nouveau stock"
                     min="0"
                     step="1"
-                    value={newStock[product._id] ?? ""}
+                    value={newStock[product._id] ?? ''}
                     className="border p-2 w-20"
                     onChange={(e) =>
                       setNewStock({
@@ -221,9 +223,7 @@ const Admin = () => {
                     className="bg-green-500 text-white px-2 py-1 ml-2 rounded"
                     disabled={updatingStock === product._id}
                   >
-                    {updatingStock === product._id
-                      ? "Mise à jour..."
-                      : "Mettre à jour"}
+                    {updatingStock === product._id ? 'Mise à jour...' : 'Mettre à jour'}
                   </button>
                 </td>
               </tr>
@@ -247,8 +247,8 @@ const Admin = () => {
               <strong>Total :</strong> {selectedOrder.total} €
             </p>
             <p>
-              <strong>Livraison :</strong> {selectedOrder.shippingMethod} — {selectedOrder.shippingAddress?.street},{" "}
-              {selectedOrder.shippingAddress?.postalCode} {selectedOrder.shippingAddress?.city},{" "}
+              <strong>Livraison :</strong> {selectedOrder.shippingMethod} — {selectedOrder.shippingAddress?.street},{' '}
+              {selectedOrder.shippingAddress?.postalCode} {selectedOrder.shippingAddress?.city},{' '}
               {selectedOrder.shippingAddress?.country}
             </p>
             <p>
@@ -259,7 +259,7 @@ const Admin = () => {
               {selectedOrder.items.map((item, index) => (
                 <li key={index} className="border-b p-2">
                   <p>
-                    <strong>Produit :</strong> {item.productId?.name || item.productId?._id || "Produit supprimé"}
+                    <strong>Produit :</strong> {item.productId?.name || item.productId?._id || 'Produit supprimé'}
                   </p>
                   <p>
                     <strong>Quantité :</strong> {item.quantity}
@@ -270,10 +270,7 @@ const Admin = () => {
                 </li>
               ))}
             </ul>
-            <button
-              onClick={() => setSelectedOrder(null)}
-              className="bg-red-500 text-white px-4 py-2 mt-4 rounded"
-            >
+            <button onClick={() => setSelectedOrder(null)} className="bg-red-500 text-white px-4 py-2 mt-4 rounded">
               Fermer
             </button>
           </div>

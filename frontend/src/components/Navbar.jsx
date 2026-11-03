@@ -19,16 +19,14 @@ const Navbar = () => {
   return (
     <nav className="bg-blue-500 text-white p-4 flex justify-between items-center">
       <div className="flex items-center space-x-4">
-        <Link to="/" className="text-xl font-bold">Mon Application</Link>
+        <Link to="/" className="text-xl font-bold">
+          Mon Application
+        </Link>
       </div>
 
       <div className="flex items-center space-x-4">
         {/* Afficher le nom de l'utilisateur s'il est connecté */}
-        {user && (
-          <span className="font-semibold">
-            Bonjour, {user.username}
-          </span>
-        )}
+        {user && <span className="font-semibold">Bonjour, {user.username}</span>}
 
         {isAdmin && <Link to="/admin">Administration</Link>}
 
@@ -36,9 +34,7 @@ const Navbar = () => {
         <Link to="/cart" className="relative">
           <span>Panier</span>
           {itemCount > 0 && (
-            <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs px-2">
-              {itemCount}
-            </span>
+            <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs px-2">{itemCount}</span>
           )}
         </Link>
 

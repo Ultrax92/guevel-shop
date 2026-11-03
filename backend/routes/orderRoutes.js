@@ -1,6 +1,12 @@
 // backend/routes/orderRoutes.js
 const express = require('express');
-const { createOrder, deleteOrder, getOrders, validateOrder, updateOrderStatus } = require('../controllers/orderController');
+const {
+  createOrder,
+  deleteOrder,
+  getOrders,
+  validateOrder,
+  updateOrderStatus,
+} = require('../controllers/orderController');
 const { authenticateToken, isAdmin } = require('../middlewares/authMiddleware');
 const validate = require('../middlewares/validate');
 const { orderSchema, orderStatusSchema, idParamSchema } = require('../validators/schemas');

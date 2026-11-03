@@ -70,7 +70,9 @@ const Register = () => {
           onChange={handleChange}
           className="border border-gray-300 p-2 w-full mb-4"
         />
-        <button type="submit" className="bg-blue-500 text-white p-2 w-full rounded">S&apos;inscrire</button>
+        <button type="submit" className="bg-blue-500 text-white p-2 w-full rounded">
+          S&apos;inscrire
+        </button>
       </form>
     </div>
   );

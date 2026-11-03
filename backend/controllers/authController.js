@@ -91,7 +91,7 @@ exports.register = async (req, res) => {
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
 
     if (existingUser) {
-      return res.status(400).json({ message: 'Ce nom d\'utilisateur ou cet e-mail est déjà utilisé.' });
+      return res.status(400).json({ message: "Ce nom d'utilisateur ou cet e-mail est déjà utilisé." });
     }
 
     // Créer un nouvel utilisateur
@@ -102,7 +102,7 @@ exports.register = async (req, res) => {
 
     res.status(201).json({ message: 'Utilisateur créé avec succès.' });
   } catch (error) {
-    logger.error('Erreur lors de l\'inscription', { error: error.message });
+    logger.error("Erreur lors de l'inscription", { error: error.message });
     res.status(500).json({ message: 'Une erreur est survenue.' });
   }
 };

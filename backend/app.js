@@ -13,9 +13,7 @@ app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
 // CORS restreint aux fronts autorisés (liste séparée par des virgules)
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
-  .split(',')
-  .map((origin) => origin.trim());
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000').split(',').map((origin) => origin.trim());
 // En-têtes de sécurité HTTP (HSTS, nosniff, frameguard, CSP minimale pour une API JSON…)
 app.use(helmet());
 // credentials: true -> le navigateur envoie le cookie HttpOnly d'authentification

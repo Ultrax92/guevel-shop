@@ -4,8 +4,11 @@ const proxy = require('express-http-proxy');
 
 const router = express.Router();
 
-router.use('/', proxy(() => process.env.NOTIFI_SERVICE_URL, {
-  proxyReqPathResolver: (req) => req.originalUrl,
-}));
+router.use(
+  '/',
+  proxy(() => process.env.NOTIFI_SERVICE_URL, {
+    proxyReqPathResolver: (req) => req.originalUrl,
+  })
+);
 
 module.exports = router;

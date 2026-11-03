@@ -8,13 +8,12 @@ const { stockSchema, idParamSchema } = require('../validators/schemas');
 const router = express.Router();
 router.get('/', getProducts);
 router.put(
-  "/:productId/stock",
+  '/:productId/stock',
   authenticateToken,
   isAdmin,
   validate(idParamSchema('productId'), 'params'),
   validate(stockSchema),
   updateProductStock
 );
-
 
 module.exports = router;

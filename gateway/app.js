@@ -14,14 +14,24 @@ app.use(helmet());
 app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
-    logger.info('http', { method: req.method, url: req.originalUrl, status: res.statusCode, durationMs: Date.now() - start });
+    logger.info('http', {
+      method: req.method,
+      url: req.originalUrl,
+      status: res.statusCode,
+      durationMs: Date.now() - start,
+    });
   });
   next();
 });
 
 // Sonde de supervision
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'gateway', env: process.env.APP_ENV || 'local', version: process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7) : 'local' });
+  res.json({
+    status: 'ok',
+    service: 'gateway',
+    env: process.env.APP_ENV || 'local',
+    version: process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7) : 'local',
+  });
 });
 
 // Routes principales pour chaque microservice (le corps est relayé tel quel, sans parsing)
