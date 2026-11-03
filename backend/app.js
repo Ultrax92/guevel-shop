@@ -62,7 +62,7 @@ app.use(async (req, res, next) => {
   try {
     await connectDB();
     next();
-  } catch (err) {
+  } catch {
     res.status(503).json({ message: 'Base de données indisponible' });
   }
 });
@@ -75,7 +75,6 @@ app.use('/api/audit', require('./routes/auditRoutes'));
 app.use((req, res) => res.status(404).json({ message: 'Ressource introuvable' }));
 
 // Gestionnaire d'erreurs global : évite le crash et ne divulgue pas la stack au client
-// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   logger.error('Erreur non gérée', { error: err.message, stack: err.stack, url: req.originalUrl });
   res.status(500).json({ message: 'Erreur serveur' });

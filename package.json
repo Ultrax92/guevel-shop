@@ -1,10 +1,31 @@
 {
+  "name": "guevel-shop",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Mini site e-commerce MERN : frontend React, API Express, gateway et microservices",
   "scripts": {
     "start:notifications": "nodemon microservices/notifications/index.js",
     "start:stock-management": "nodemon microservices/stock-management/index.js",
     "start:gateway": "nodemon gateway/server.js",
     "start:backend": "nodemon backend/server.js",
     "start:frontend": "npm --prefix frontend start",
-    "start:all": "npm-run-all --parallel start:notifications start:stock-management start:gateway start:backend start:frontend"
+    "start:all": "npm-run-all --parallel start:notifications start:stock-management start:gateway start:backend start:frontend",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "docs": "jsdoc -c jsdoc.json",
+    "test:smoke": "node scripts/smoke-test.js .env http://localhost:5000"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^15.15.0",
+    "jsdoc": "^4.0.5",
+    "nodemon": "^3.1.14",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.9.10"
   }
 }

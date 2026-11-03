@@ -16,11 +16,12 @@ exports.authenticateToken = (req, res, next) => {
 
   try {
     req.user = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
-    next();
-  } catch (error) {
+  } catch {
     logger.warn('Token JWT invalide ou expiré', { url: req.originalUrl });
     return res.status(401).json({ message: 'Session invalide ou expirée, veuillez vous reconnecter.' });
   }
+  // Hors du try : une erreur levée plus loin dans la chaîne ne doit pas passer pour un token invalide
+  next();
 };
 
 /**

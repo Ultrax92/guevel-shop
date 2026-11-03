@@ -1,5 +1,5 @@
 // src/pages/ProductList.js
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchProducts } from '../services/api';
 import { useCart } from '../context/CartContext';
 

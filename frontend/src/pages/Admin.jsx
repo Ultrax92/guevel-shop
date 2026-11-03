@@ -1,5 +1,5 @@
 // src/pages/Admin.js
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   getOrders,
   updateOrderStatus,
@@ -104,7 +104,7 @@ const Admin = () => {
 
   return (
     <div className="p-8">
-      <h2 className="text-2xl font-bold mb-4">Page d'administration</h2>
+      <h2 className="text-2xl font-bold mb-4">Page d&apos;administration</h2>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       {/* Gestion des Commandes */}
       <div className="mb-6">
@@ -150,7 +150,7 @@ const Admin = () => {
                   className="bg-blue-700 text-white px-2 py-1 mt-2 rounded mr-2"
                   disabled={loadingOrder === order._id}
                 >
-                  Marquer "Délivrée"
+                  Marquer « Délivrée »
                 </button>
               )}
 

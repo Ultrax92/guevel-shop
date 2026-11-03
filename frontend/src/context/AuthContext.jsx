@@ -1,7 +1,7 @@
 // src/context/AuthContext.js
 // Session utilisateur côté front : le JWT reste dans un cookie HttpOnly (illisible en JavaScript),
 // le front ne connaît que le profil public renvoyé par /auth/me.
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import http from '../services/http';
 
 const AuthContext = createContext();

@@ -1,6 +1,5 @@
 // src/components/AdminRoute.js
 // Confort d'affichage uniquement : le contrôle réel du rôle admin est fait par le backend (isAdmin)
-import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 

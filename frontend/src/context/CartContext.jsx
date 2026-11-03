@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useReducer } from "react";
+import { createContext, useContext, useReducer } from "react";
 
 const CartContext = createContext();
 
 export const cartReducer = (state, action) => {
   switch (action.type) {
-    case "ADD_TO_CART":
+    case "ADD_TO_CART": {
       const existingProductIndex = state.cart.findIndex(
         (item) => item.id === action.payload.id
       );
@@ -23,6 +23,7 @@ export const cartReducer = (state, action) => {
           cart: [...state.cart, { ...action.payload, quantity: 1 }],
         };
       }
+    }
 
     case "DECREMENT_QUANTITY":
       return {
