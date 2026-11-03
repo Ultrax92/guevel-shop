@@ -129,7 +129,7 @@ Sur chaque push et pull request vers `main` / `develop` :
 
 ### Déploiement continu — Vercel
 - `develop` → déploiement automatique en **préproduction** ; `main` → **production**.
-- Un service n'est reconstruit que si son dossier a changé depuis son dernier déploiement réussi (`ignoreCommand` basé sur `VERCEL_GIT_PREVIOUS_SHA`) : monorepo de 5 projets sans builds inutiles.
+- Un service n'est reconstruit que si son dossier a changé depuis son dernier déploiement réussi (`ignoreCommand` basé sur `VERCEL_GIT_PREVIOUS_SHA`) : monorepo de 5 projets sans builds inutiles. Si ce commit est absent du clone partiel de Vercel, le service est reconstruit par sécurité (`git rev-parse --verify`).
 - Flux : feature → `develop` (préprod, recette) → pull request vers `main` (CI verte obligatoire) → production.
 - Mise en œuvre réelle : PR [#1](https://github.com/Ultrax92/guevel-shop/pull/1) `develop → main`, contrôles GitHub Actions et Vercel verts avant fusion. Seul le service modifié (API) a été reconstruit, les autres ont été ignorés automatiquement. `[capture: PR #1 et ses checks]`
 - Chaque `/health` expose la version déployée (`version` = commit), ce qui permet de vérifier d'un coup d'œil ce qui tourne en préprod et en prod.

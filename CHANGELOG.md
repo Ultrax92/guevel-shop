@@ -33,6 +33,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), ver
   - stock 0 refusé dans l'admin ;
   - erreurs serveur non affichées.
 - Champs `createdAt` / `updatedAt` en double avec `timestamps` dans le modèle Order.
+- Déploiement Vercel en échec (`fatal: bad object`) quand le dernier commit déployé n’est plus dans le clone partiel de Vercel, par exemple après un push de plusieurs commits : la règle de build vérifie désormais que ce commit existe, sinon elle reconstruit.
 
 ### Ajouté
 - Actions admin : validation, annulation, livraison et suppression de commande. Noms des produits dans le détail.
