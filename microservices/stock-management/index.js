@@ -1,13 +1,8 @@
-const express = require('express');
-const app = express();
-const PORT = 4003;
+// stock-management/index.js
+require('dotenv').config();
+const app = require('./app');
+const logger = require('./lib/logger');
 
-app.use(express.json());
+const PORT = process.env.STOCK_PORT || process.env.PORT || 4003;
 
-app.post('/update-stock', (req, res) => {
-    const { productId, quantity } = req.body;
-    console.log(`Mise à jour du stock: Produit ${productId}, Quantité ${quantity}`);
-    res.send(`Stock mis à jour pour le produit de ID : ${productId}`);
-});
-
-app.listen(PORT, () => console.log(`Service de gestion des stocks sur le port ${PORT}`));
+app.listen(PORT, () => logger.info(`Service de gestion des stocks sur le port ${PORT}`));

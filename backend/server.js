@@ -1,17 +1,11 @@
 // server.js
-const express = require('express');
-const cors = require('cors');
 require('dotenv').config();
+const app = require('./app');
 const connectDB = require('./config/db');
+const logger = require('./config/logger');
 
-const app = express();
-connectDB();
-
-app.use(cors());
-app.use(express.json());
-app.use('/api/products', require('./routes/productRoutes'));
-app.use('/api/orders', require('./routes/orderRoutes'));
-app.use('/api/auth', require('./routes/authRoutes'));
+// Connexion anticipée ; en cas d'échec, les routes répondent 503 et la sonde /health passe en "degraded"
+connectDB().catch(() => {});
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Serveur en écoute sur le port ${PORT}`));
+app.listen(PORT, () => logger.info(`Serveur en écoute sur le port ${PORT}`));

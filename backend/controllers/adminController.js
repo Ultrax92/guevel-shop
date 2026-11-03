@@ -1,5 +1,5 @@
 // backend/controllers/adminController.js
-const axios = require('axios');
+const { sendNotification } = require('../services/notificationService');
 const Order = require('../models/Order'); // Modèle pour les commandes
 const Product = require('../models/Product'); // Modèle pour les produits
 
@@ -20,9 +20,7 @@ exports.updateOrderStatus = async (req, res) => {
 
   try {
     await Order.findByIdAndUpdate(id, { status });
-    await axios.post('http://localhost:3001/notify', {
-      message: `Le statut de la commande ${id} a été mis à jour en "${status}".`,
-    });
+    await sendNotification({ subject: 'Mise à jour boutique', text: `Le statut de la commande ${id} a été mis à jour en "${status}".` });
     res.json({ message: `Statut de la commande ${id} mis à jour` });
   } catch (error) {
     res.status(500).json({ message: 'Erreur de mise à jour du statut de la commande' });
@@ -35,9 +33,7 @@ exports.validateOrder = async (req, res) => {
 
   try {
     await Order.findByIdAndUpdate(id, { status: 'Validée' });
-    await axios.post('http://localhost:3001/notify', {
-      message: `La commande ${id} a été validée.`,
-    });
+    await sendNotification({ subject: 'Mise à jour boutique', text: `La commande ${id} a été validée.` });
     res.json({ message: `Commande ${id} validée` });
   } catch (error) {
     res.status(500).json({ message: 'Erreur lors de la validation de la commande' });
@@ -61,9 +57,7 @@ exports.updateProductStock = async (req, res) => {
 
   try {
     await Product.findByIdAndUpdate(id, { stock });
-    await axios.post('http://localhost:3001/notify', {
-      message: `Le stock du produit ${id} a été mis à jour à ${stock}.`,
-    });
+    await sendNotification({ subject: 'Mise à jour boutique', text: `Le stock du produit ${id} a été mis à jour à ${stock}.` });
     res.json({ message: `Stock du produit ${id} mis à jour` });
   } catch (error) {
     res.status(500).json({ message: 'Erreur lors de la mise à jour du stock du produit' });

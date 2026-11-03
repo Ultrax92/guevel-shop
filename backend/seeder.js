@@ -1,17 +1,11 @@
 // backend/seeder.js
+// Usage : node seeder.js  (lit MONGO_URI, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD dans l'environnement)
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const Product = require('./models/Product'); // Assurez-vous que le chemin est correct
+const Product = require('./models/Product');
+const User = require('./models/User');
 
 dotenv.config();
-
-// Connexion à MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log('MongoDB connecté pour le seed'))
-  .catch((err) => console.error('Erreur de connexion à MongoDB', err));
 
 // Jeux de produits à insérer
 const products = [
@@ -47,22 +41,42 @@ const products = [
   },
 ];
 
-// Fonction pour insérer les produits
-const seedProducts = async () => {
+// Le dump et les accès admin n'étant pas fournis, le premier administrateur est créé ici
+const seedAdmin = async () => {
+  const { ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
+  if (!ADMIN_USERNAME || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
+    console.log('ADMIN_USERNAME / ADMIN_EMAIL / ADMIN_PASSWORD absents : pas de création d\'admin');
+    return;
+  }
+
+  const existing = await User.findOne({ username: ADMIN_USERNAME });
+  if (existing) {
+    console.log(`Admin "${ADMIN_USERNAME}" déjà présent`);
+    return;
+  }
+
+  // save() déclenche le hash bcrypt du modèle User
+  await new User({ username: ADMIN_USERNAME, email: ADMIN_EMAIL, password: ADMIN_PASSWORD, role: 'admin' }).save();
+  console.log(`Admin "${ADMIN_USERNAME}" créé`);
+};
+
+const seed = async () => {
   try {
-    // Supprimer les anciens produits (optionnel)
+    await mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 10000 });
+    console.log('MongoDB connecté pour le seed');
+
+    // Supprimer les anciens produits puis insérer le jeu de données
     await Product.deleteMany();
-
-    // Insérer les nouveaux produits
     await Product.insertMany(products);
-
     console.log('Jeux de produits insérés avec succès !');
-    process.exit();
+
+    await seedAdmin();
+    await mongoose.disconnect();
+    process.exit(0);
   } catch (error) {
-    console.error('Erreur lors de l\'insertion des produits', error);
+    console.error('Erreur lors du seed :', error.message);
     process.exit(1);
   }
 };
 
-// Lancer le seed
-seedProducts();
+seed();
