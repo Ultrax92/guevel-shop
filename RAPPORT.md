@@ -110,6 +110,7 @@ Actions réalisées :
 - Chaque domaine est rattaché à son projet Vercel ; les domaines de préproduction sont liés à la branche `develop` (*Git branch domain*).
 - **Certificats** : émis automatiquement par Vercel (Let's Encrypt, challenge HTTP-01) pour chaque sous-domaine, renouvellement automatique.
 - **Vérification** (`curl`) : certificat valide (`ssl_verify_result=0`) sur tous les domaines ; `https://www.guevel-shop.xyz` → `308` vers `https://guevel-shop.xyz` ; en-tête HSTS présent. `[capture: cadenas navigateur + détail du certificat]`
+- Remarque « DNS Change Recommended » dans Vercel : ce n'est pas une erreur. L'API Vercel renvoie `misconfigured: false` et `ipStatus: optional-change` : les valeurs historiques (`76.76.21.21`, `cname.vercel-dns.com`) restent valides, et Vercel suggère simplement ses nouvelles cibles (IP `216.198.79.1` et CNAME dédié par projet, `*.vercel-dns-017.com`). Évolution possible : remplacer le CNAME générique `*` par un CNAME explicite par sous-domaine. Ça évite aussi qu'un sous-domaine non prévu pointe vers Vercel.
 
 ---
 
@@ -153,7 +154,16 @@ Sur chaque push et pull request vers `main` / `develop` :
 - Sondes `/health` sur chaque service, qui renvoient `status`, `service`, `env` et `version`. Le backend envoie en plus un vrai `ping` à MongoDB : 200 si la base répond, 503 sinon.
 - Test de panne en local : arrêt du conteneur Mongo → `/health` passe en 503 `degraded`, puis revient automatiquement en 200 après redémarrage (reconnexion automatique).
 - Faux positif corrigé : au réveil d'une instance serverless, l'ancien contrôle (`readyState`) signalait `db: down` pendant la reconnexion. Il est remplacé par un `ping` réel, pour éviter les fausses alertes.
-- *(moniteurs UptimeRobot sur les deux environnements + alertes e-mail : en cours)*
+- **UptimeRobot** (offre gratuite) : 10 moniteurs créés par script (`scripts/uptimerobot-setup.js`, via l'API, clé jamais versionnée) :
+
+| Environnement | Moniteur | Type | Condition d'alerte |
+|---|---|---|---|
+| Prod / Préprod | frontend (`/`) | HTTP(S) | code ≠ 2xx/3xx ou délai dépassé |
+| Prod / Préprod | api, gateway, notifications, stock (`/health`) | Mot-clé | la réponse ne contient plus `"status":"ok"` (couvre aussi la base indisponible côté API, qui renvoie `degraded`) |
+
+  Vérification toutes les 5 minutes, **alerte e-mail** au contact du compte. `[capture: tableau de bord UptimeRobot]`
+- Alerte de bout en bout : une panne de base fait passer l'API en `degraded` (HTTP 503), le mot-clé disparaît et l'alerte part. Le retour à la normale envoie une notification « Up ».
+- Complément : Vercel Runtime Logs pour le diagnostic, et la version (commit) dans `/health` pour relier un incident au déploiement en cause.
 
 ---
 
@@ -166,8 +176,10 @@ Sur chaque push et pull request vers `main` / `develop` :
 | 3 | `docker-compose.yml` : ports faux, gateway absent | `docker-compose.yml` | Réécriture complète | ✅ |
 | 4 | Build Vercel en échec (warning ESLint `setError` inutilisé) | `frontend/src/pages/Register.js` | Message d'erreur affiché dans le formulaire | ✅ |
 | 5 | Accès admin et dump absents | `backend/seeder.js` | Création du premier admin à partir des variables d'environnement | ✅ |
-| 6 | Identifiants SMTP fournis refusés par Gmail (`535 BadCredentials`) | configuration | Mot de passe d'application Gmail du candidat, stocké en *Secret* Vercel | ⏳ |
+| 6 | Identifiants SMTP fournis refusés par Gmail (`535 BadCredentials`) | configuration | Mot de passe d'application Gmail du candidat, stocké en *Secret* Vercel ; envoi validé (« Email envoyé avec succès » dans les logs, e-mail reçu) | ✅ |
 | 7 | `/health` : faux « db: down » au réveil d'une instance serverless | `backend/app.js` | `ping` MongoDB réel | ✅ |
+| 8 | CI : job Docker en échec sur les pull requests (tag `2/merge` invalide) | `.github/workflows/ci.yml` | Tag calculé à partir de la branche source, `/` remplacé | ✅ |
+| 9 | Un redéploiement (après changement de variable d'env) était annulé par l'*Ignored Build Step* | `*/vercel.json` | Build forcé lorsqu'il s'agit du même commit | ✅ |
 | … | *(suite en session 2)* | | | |
 
 ---
