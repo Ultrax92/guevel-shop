@@ -1,5 +1,6 @@
 // controllers/productController.js
 const Product = require('../models/Product');
+const { audit } = require('../services/auditService');
 
 exports.getProducts = async (req, res) => {
     const products = await Product.find();
@@ -24,6 +25,7 @@ exports.updateProductStock = async (req, res) => {
       product.updatedAt = Date.now();
   
       await product.save();
+      await audit(req, 'stock produit modifié', { actorId: req.user.userId, details: { productId, stock } });
   
       res.json({ message: "Stock mis à jour avec succès.", product });
     } catch (error) {

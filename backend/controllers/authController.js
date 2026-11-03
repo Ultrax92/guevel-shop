@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User'); // modèle utilisateur
 const logger = require('../config/logger');
+const { audit } = require('../services/auditService');
 //const sendEmail = require('../services/emailService');
 
 // Ne jamais journaliser de mot de passe, de hash ou de token
@@ -12,18 +13,18 @@ exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ username });
     if (!user) {
-      logger.warn('Audit: échec de connexion (utilisateur inconnu)', { audit: true, username });
+      await audit(req, 'échec de connexion (utilisateur inconnu)', { level: 'warn', username });
       return res.status(400).json({ message: 'Utilisateur non trouvé' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      logger.warn('Audit: échec de connexion (mot de passe)', { audit: true, username });
+      await audit(req, 'échec de connexion (mot de passe)', { level: 'warn', actorId: user._id, username });
       return res.status(400).json({ message: 'Mot de passe incorrect' });
     }
 
     const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    logger.info('Audit: connexion réussie', { audit: true, userId: user._id.toString(), role: user.role });
+    await audit(req, 'connexion réussie', { actorId: user._id, username: user.username, details: { role: user.role } });
 
     res.json({ token, role: user.role, username: user.username });
   } catch (error) {
@@ -48,7 +49,7 @@ exports.register = async (req, res) => {
     const user = new User({ username, email, password });
     await user.save();
 
-    logger.info('Audit: nouvel utilisateur inscrit', { audit: true, userId: user._id.toString() });
+    await audit(req, 'nouvel utilisateur inscrit', { actorId: user._id, username: user.username });
 
     // Envoyer un email de bienvenue
     // await sendEmail(
