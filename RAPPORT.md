@@ -180,15 +180,53 @@ Sur chaque push et pull request vers `main` / `develop` :
 | 7 | `/health` : faux « db: down » au réveil d'une instance serverless | `backend/app.js` | `ping` MongoDB réel | ✅ |
 | 8 | CI : job Docker en échec sur les pull requests (tag `2/merge` invalide) | `.github/workflows/ci.yml` | Tag calculé à partir de la branche source, `/` remplacé | ✅ |
 | 9 | Un redéploiement (après changement de variable d'env) était annulé par l'*Ignored Build Step* | `*/vercel.json` | Build forcé lorsqu'il s'agit du même commit | ✅ |
-| … | *(suite en session 2)* | | | |
+| 10 | `DELETE /api/orders/:id` ne renvoyait jamais de réponse (requête bloquée) et n'exigeait pas le rôle admin | `orderController.js`, `orderRoutes.js` | Suppression réelle, réservée aux admins, avec restitution du stock si la commande n'est pas expédiée | ✅ |
+| 11 | `PUT /api/orders/:id/validate` ne faisait rien (lisait `orderId` dans le corps au lieu de l'URL) | `orderController.js` | La commande passe « En cours de traitement », l'action est auditée et le client est notifié | ✅ |
+| 12 | Le stock n'était jamais décrémenté (appel au microservice commenté) : survente possible | `stockService.js` | Réservation **atomique** (`findOneAndUpdate` avec `stock >= quantité`), restituée en cas d'échec ou d'annulation ; événement envoyé au microservice stock ; alerte « stock bas » | ✅ |
+| 13 | Statut « Validée » écrit en base alors qu'il n'existe pas dans l'énumération du modèle (`runValidators` absent) | `adminController.js` (supprimé), `schemas.js` | Statuts validés par Joi ; une commande annulée ne peut plus changer de statut | ✅ |
+| 14 | `getOrders` et `getProducts` sans `try/catch` : exception non gérée en cas d'erreur de base | contrôleurs | `try/catch` et gestionnaire d'erreurs global | ✅ |
+| 15 | Inscription avec un nom d'utilisateur déjà pris → erreur 500 (index unique) | `authController.js` | Vérification préalable, message 400 | ✅ |
+| 16 | Routes admin (`adminRoutes`) jamais montées : code mort qui dupliquait les routes commandes/produits | `backend/routes` | Supprimées, fonctionnalités utiles fusionnées | ✅ |
+| 17 | Navbar non mise à jour après connexion ; rôle conservé après déconnexion | `Navbar.jsx` | Contexte d'authentification réactif, déconnexion côté serveur | ✅ |
+| 18 | Livraison et paiement jamais enregistrés tant que l'option affichée par défaut n'était pas changée → commande refusée | `ShippingMethodSelection.jsx`, `PaymentMethodSelection.jsx` | Option « -- Choisissez -- » vide et obligatoire | ✅ |
+| 19 | Route `shippig_payment` (faute de frappe) accessible sans être connecté | `App.jsx` | `/shipping-payment` protégée, retour à la page demandée après connexion | ✅ |
+| 20 | Panier : mutation directe de l'état React (`quantity +=`) ; clé React `product.id` inexistante | `CartContext.jsx`, `ProductList.jsx` | Mise à jour immuable, clé `_id`, couverte par 5 tests unitaires | ✅ |
+| 21 | Admin : un stock à 0 était refusé (`!stockValue`), erreurs de chargement non gérées | `Admin.jsx` | Contrôle corrigé, messages d'erreur, nom des produits dans le détail | ✅ |
+| 22 | `authenticateToken` : `next()` dans le `try`, une erreur en aval était présentée comme « token invalide » | `authMiddleware.js` | `next()` sorti du bloc | ✅ |
+| 23 | Test par défaut de CRA cassé (cherchait « learn react ») | `App.test.js` | Remplacé par des tests du panier | ✅ |
+
+**Vérification** : test de fumée `scripts/smoke-test.js` (25 contrôles), exécuté en local (Docker) et intégré à la CI avec une vraie base MongoDB ; parcours complet rejoué dans un navigateur (inscription, connexion, panier, livraison, commande, déconnexion). `[capture: sortie du test de fumée]`
 
 ---
 
 ## E28 — Failles de sécurité et corrections
-*(session 2)*
+
+| # | Faille | Risque | Correction | Vérification |
+|---|---|---|---|---|
+| 1 | **Prix et total envoyés par le client** et enregistrés tels quels | Fraude : acheter un produit à 0,01 € | Prix relus en base, total recalculé ; les champs `price`/`total` du client sont supprimés par Joi | Commande envoyée avec `price: 0.01` → total facturé 700 € |
+| 2 | **JWT dans le `localStorage`** | Vol de session par XSS | Cookie `HttpOnly` + `Secure` + `SameSite=Strict`, routes `/logout` et `/me` ; le front ne stocke plus ni token ni rôle | `document.cookie` et `localStorage` vides dans le navigateur ; cookie HttpOnly vérifié par le test |
+| 3 | **Aucune validation des entrées** | Données incohérentes, injection NoSQL (`{"$ne": null}`) | Schémas **Joi** sur toutes les routes + `mongoose sanitizeFilter` | Injection → 400 ; statut, stock, identifiant invalides → 400 |
+| 4 | **Énumération des comptes** (« Utilisateur non trouvé » / « Mot de passe incorrect ») | Découverte des identifiants existants | Message unique « Identifiants invalides » (401) | Messages identiques vérifiés |
+| 5 | **Force brute** sur la connexion | Devinette de mots de passe | `express-rate-limit` : 20 essais / 15 min / IP sur `/api/auth` | — |
+| 6 | Mots de passe faibles acceptés | Comptes faciles à compromettre | 8 caractères min., lettre + chiffre | Inscription « 123 » → 400 |
+| 7 | En-têtes HTTP de sécurité absents | Clickjacking, sniffing MIME… | `helmet` sur les 4 services Node + en-têtes Vercel/Nginx pour le front | En-têtes présents en prod |
+| 8 | `DELETE /api/orders/:id` sans contrôle de rôle | Un client pouvait supprimer des commandes | `isAdmin` + validation de l'identifiant | — |
+| 9 | Secrets journalisés et distribués (session 1) | Fuite de mots de passe, tokens, SMTP | Voir E22 : secrets retirés des logs, régénérés, stockés en *Secret* Vercel | 0 secret dans l'historique Git |
+| 10 | `/notify` ouvert à tous (session 1) | Relais d'e-mails abusif | Clé interne à temps constant entre services | 401 sans clé |
+| 11 | **Dépendances vulnérables** | Exploitation de failles connues | Services Node : `npm audit fix` ; frontend : **migration CRA → Vite** (CRA n'est plus maintenu) | Frontend : **71 vulnérabilités (dont 4 critiques) → 0** ; services : 0 high/critical (contrôle CI) |
+
+Qualité du code : **ESLint** (flat config, règles React/Hooks) et **Prettier** configurés à la racine pour tout le dépôt, contrôlés par un job CI dédié ; les erreurs remontées par ESLint ont été corrigées (bug n° 22 notamment).
+
+Remarque sur `connect-flash` (cité dans les consignes) : ce module repose sur des sessions serveur et des rendus côté serveur. L'application étant une API JSON consommée par une SPA React, l'équivalent mis en place est un format d'erreur uniforme (`message` + `details`) affiché par le front dans les formulaires.
+
+---
 
 ## E29 — Documentation et CHANGELOG
-*(session 2)*
+
+- **Documentation générée à partir du code** : commentaires JSDoc (`@module`, `@param`, `@returns`, `@typedef`) sur tous les fichiers du backend, du gateway et des microservices, puis génération HTML par `npm run docs` (JSDoc), dans [`docs/api`](docs/api/index.html) : 66 pages, une par module, avec le code source annoté. La CI échoue si un commentaire JSDoc est invalide. `[capture: page d'accueil et d'un module de docs/api]`
+- **README.md** : architecture, tableau des routes de l'API, démarrage local (Docker ou non), scripts, flux CI/CD, sécurité, supervision.
+- **CHANGELOG.md** au format *Keep a Changelog* et versionnage sémantique : `1.0.0` (version fournie), `1.1.0` (mise en production), `2.0.0` (robustesse, sécurité, documentation).
+- **Historique Git** lisible : commits conventionnels (`feat`, `fix`, `ci`, `docs`, `style`…) avec description détaillée, formatage isolé dans un commit `style`.
 
 ---
 
