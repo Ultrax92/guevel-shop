@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Home</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Home</h1>
+
+    
+
+
+
+    
+
+
+    <h3> </h3>
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+    <section>
+        <article><h1>Guevel Shop — mini site e-commerce MERN</h1>
+<p>Application e-commerce (catalogue, panier, commande, administration) composée d'un frontend React, d'une API Express/MongoDB, d'un gateway et de deux microservices (notifications, gestion du stock).</p>
+<table>
+<thead>
+<tr>
+<th>Environnement</th>
+<th>Frontend</th>
+<th>API</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Production (<code>main</code>)</td>
+<td>https://guevel-shop.xyz</td>
+<td>https://api.guevel-shop.xyz</td>
+</tr>
+<tr>
+<td>Préproduction (<code>develop</code>)</td>
+<td>https://preprod.guevel-shop.xyz</td>
+<td>https://api-preprod.guevel-shop.xyz</td>
+</tr>
+</tbody>
+</table>
+<p>Documents associés : <a href="CHANGELOG.md">CHANGELOG.md</a> (journal des évolutions), <a href="RAPPORT.md">RAPPORT.md</a> (rapport d'examen), documentation du code générée dans <a href="docs/api/index.html"><code>docs/api</code></a>.</p>
+<hr>
+<h2>Architecture</h2>
+<pre class="prettyprint source"><code>Navigateur ──HTTPS──► Frontend React (Vite)            guevel-shop.xyz
+    │
+    └──HTTPS + cookie HttpOnly──► API backend (Express) api.guevel-shop.xyz ──TLS──► MongoDB Atlas
+                                        │
+                                        └── x-internal-key ──► Gateway  gateway.guevel-shop.xyz
+                                                                  ├──► notifications (Nodemailer / Gmail SMTP)
+                                                                  └──► stock-management
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Dossier</th>
+<th>Rôle</th>
+<th>Port local</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>frontend/</code></td>
+<td>React 18 + React Router 7 + Tailwind, build Vite</td>
+<td>3000</td>
+</tr>
+<tr>
+<td><code>backend/</code></td>
+<td>API REST : authentification JWT (cookie), produits, commandes, audit</td>
+<td>5000</td>
+</tr>
+<tr>
+<td><code>gateway/</code></td>
+<td>Point d'entrée unique vers les microservices (<code>/notify</code>, <code>/update-stock</code>)</td>
+<td>8000</td>
+</tr>
+<tr>
+<td><code>microservices/notifications/</code></td>
+<td>Envoi des e-mails (nouvelle commande, statut, stock bas)</td>
+<td>4002</td>
+</tr>
+<tr>
+<td><code>microservices/stock-management/</code></td>
+<td>Réception des mouvements de stock</td>
+<td>4003</td>
+</tr>
+<tr>
+<td><code>scripts/</code></td>
+<td>Test de fumée de bout en bout, création des moniteurs UptimeRobot</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3>Principales routes de l'API</h3>
+<table>
+<thead>
+<tr>
+<th>Méthode</th>
+<th>Route</th>
+<th>Accès</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/health</code></td>
+<td>public</td>
+<td>Sonde de supervision (service, environnement, version, base)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/auth/register</code></td>
+<td>public (limité)</td>
+<td>Inscription</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/auth/login</code></td>
+<td>public (limité)</td>
+<td>Connexion : JWT posé dans un cookie HttpOnly</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/auth/logout</code></td>
+<td>public</td>
+<td>Déconnexion (suppression du cookie)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/auth/me</code></td>
+<td>connecté</td>
+<td>Profil de la session</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/products</code></td>
+<td>public</td>
+<td>Catalogue</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/products/:productId/stock</code></td>
+<td>admin</td>
+<td>Mise à jour du stock</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/orders</code></td>
+<td>connecté</td>
+<td>Création d'une commande (prix et total calculés par le serveur)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/orders</code></td>
+<td>admin</td>
+<td>Liste des commandes</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/orders/:id/validate</code></td>
+<td>admin</td>
+<td>Validation (« En cours de traitement »)</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/orders/:id/status</code></td>
+<td>admin</td>
+<td>Changement de statut (« Annulée » restitue le stock)</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/orders/:id</code></td>
+<td>admin</td>
+<td>Suppression</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/audit</code></td>
+<td>admin</td>
+<td>Journal d'audit</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>Démarrage en local</h2>
+<h3>Avec Docker (recommandé)</h3>
+<pre class="prettyprint source lang-bash"><code>cp .env.example .env        # puis renseigner les valeurs (secrets, SMTP…)
+docker compose up -d --build
+docker compose exec backend node seeder.js   # produits + premier administrateur
+</code></pre>
+<p>Frontend : http://localhost:3000 · API : http://localhost:5000/health</p>
+<h3>Sans Docker</h3>
+<p>Prérequis : Node.js 22 et une base MongoDB locale.</p>
+<pre class="prettyprint source lang-bash"><code>npm install                                    # outils racine (ESLint, Prettier, JSDoc, nodemon)
+for d in backend gateway microservices/notifications microservices/stock-management frontend; do (cd $d && npm install); done
+npm run start:all
+</code></pre>
+<hr>
+<h2>Scripts (à la racine)</h2>
+<table>
+<thead>
+<tr>
+<th>Commande</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>npm run lint</code></td>
+<td>ESLint sur tous les services et le frontend</td>
+</tr>
+<tr>
+<td><code>npm run format</code> / <code>npm run format:check</code></td>
+<td>Formatage Prettier</td>
+</tr>
+<tr>
+<td><code>npm run docs</code></td>
+<td>Génère la documentation du code (JSDoc) dans <code>docs/api</code></td>
+</tr>
+<tr>
+<td><code>npm run test:smoke</code></td>
+<td>Test de fumée de bout en bout sur l'API locale</td>
+</tr>
+<tr>
+<td><code>node scripts/smoke-test.js .env.preprod https://api-preprod.guevel-shop.xyz</code></td>
+<td>Même test sur un environnement déployé</td>
+</tr>
+<tr>
+<td><code>cd frontend &amp;&amp; npm test</code></td>
+<td>Tests unitaires du frontend (Vitest)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>Intégration et déploiement continus</h2>
+<ol>
+<li><strong>CI GitHub Actions</strong> (<code>.github/workflows/ci.yml</code>), à chaque push ou pull request :
+<ul>
+<li>qualité (ESLint, Prettier) ;</li>
+<li>chargement et <code>npm audit</code> de chaque service ;</li>
+<li>test d'intégration (API + MongoDB, test de fumée) ;</li>
+<li>tests et build du frontend ;</li>
+<li>build des images Docker, publiées sur GHCR.</li>
+</ul>
+</li>
+<li><strong>CD Vercel</strong> : <code>develop</code> est déployée en préproduction, <code>main</code> en production. Un service n'est reconstruit que si son dossier a changé.</li>
+<li><strong>Flux</strong> : branche de travail → PR vers <code>develop</code> (recette en préprod) → PR <code>develop</code> → <code>main</code> (CI verte) → production.</li>
+</ol>
+<h2>Sécurité (résumé)</h2>
+<ul>
+<li>Validation Joi de toutes les entrées, protection contre l'injection NoSQL (<code>sanitizeFilter</code>).</li>
+<li>JWT dans un cookie <code>HttpOnly</code>, <code>Secure</code> et <code>SameSite=Strict</code>. Aucun token dans le <code>localStorage</code>.</li>
+<li>Prix et total recalculés côté serveur, réservation atomique du stock.</li>
+<li>Helmet, CORS restreint aux fronts, limitation des tentatives de connexion, messages d'erreur sans fuite d'information.</li>
+<li>Clé interne entre backend, gateway et microservices. Secrets uniquement en variables d'environnement (jamais versionnés).</li>
+</ul>
+<h2>Supervision et journalisation</h2>
+<ul>
+<li>Logs JSON (Winston) sur tous les services, centralisés dans Vercel Runtime Logs.</li>
+<li>Journal d'audit persistant en base (collection <code>auditlogs</code>, 90 jours), consultable via <code>/api/audit</code>.</li>
+<li>Sondes <code>/health</code> surveillées par UptimeRobot toutes les 5 minutes, avec alerte e-mail (prod et préprod).</li>
+</ul></article>
+    </section>
+
+
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-backend_app.html">backend/app</a></li><li><a href="module-backend_config_db.html">backend/config/db</a></li><li><a href="module-backend_config_logger.html">backend/config/logger</a></li><li><a href="module-backend_controllers_authController.html">backend/controllers/authController</a></li><li><a href="module-backend_controllers_orderController.html">backend/controllers/orderController</a></li><li><a href="module-backend_controllers_productController.html">backend/controllers/productController</a></li><li><a href="module-backend_middlewares_authMiddleware.html">backend/middlewares/authMiddleware</a></li><li><a href="module-backend_middlewares_validate.html">backend/middlewares/validate</a></li><li><a href="module-backend_models_AuditLog.html">backend/models/AuditLog</a></li><li><a href="module-backend_models_Order.html">backend/models/Order</a></li><li><a href="module-backend_models_Product.html">backend/models/Product</a></li><li><a href="module-backend_models_User.html">backend/models/User</a></li><li><a href="module-backend_routes_auditRoutes.html">backend/routes/auditRoutes</a></li><li><a href="module-backend_routes_authRoutes.html">backend/routes/authRoutes</a></li><li><a href="module-backend_routes_orderRoutes.html">backend/routes/orderRoutes</a></li><li><a href="module-backend_routes_productRoutes.html">backend/routes/productRoutes</a></li><li><a href="module-backend_services_auditService.html">backend/services/auditService</a></li><li><a href="module-backend_services_notificationService.html">backend/services/notificationService</a></li><li><a href="module-backend_services_stockService.html">backend/services/stockService</a></li><li><a href="module-backend_types.html">backend/types</a></li><li><a href="module-backend_validators_schemas.html">backend/validators/schemas</a></li><li><a href="module-gateway_app.html">gateway/app</a></li><li><a href="module-gateway_lib_internalAuth.html">gateway/lib/internalAuth</a></li><li><a href="module-gateway_lib_logger.html">gateway/lib/logger</a></li><li><a href="module-gateway_routes_notifi.html">gateway/routes/notifi</a></li><li><a href="module-gateway_routes_stock.html">gateway/routes/stock</a></li><li><a href="module-microservices_notifications_app.html">microservices/notifications/app</a></li><li><a href="module-microservices_notifications_lib_internalAuth.html">microservices/notifications/lib/internalAuth</a></li><li><a href="module-microservices_notifications_lib_logger.html">microservices/notifications/lib/logger</a></li><li><a href="module-microservices_stock-management_app.html">microservices/stock-management/app</a></li><li><a href="module-microservices_stock-management_lib_internalAuth.html">microservices/stock-management/lib/internalAuth</a></li><li><a href="module-microservices_stock-management_lib_logger.html">microservices/stock-management/lib/logger</a></li></ul><h3>Classes</h3><ul><li><a href="module-backend_services_stockService-StockError.html">StockError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Tue Nov 03 2026 13:17:02 GMT+0100 (heure normale d’Europe centrale)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
