@@ -3,6 +3,15 @@
 Toutes les évolutions notables du projet sont consignées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions selon le [versionnage sémantique](https://semver.org/lang/fr/).
 
+## [2.0.1] — 2026-11-03 — Finitions de la page admin
+
+### Corrigé
+- Page admin :
+  - libellé « Status » en anglais, remplacé par « Statut » ;
+  - case « Nouveau stock » trop étroite, le texte était tronqué ;
+  - titres de sections et libellé du bouton « Expédiée » harmonisés.
+- Commentaires d'en-tête des fichiers `.jsx` qui mentionnaient encore l'extension `.js`.
+
 ## [2.0.0] — 2026-11-03 — Robustesse, sécurité et documentation
 
 ### Sécurité

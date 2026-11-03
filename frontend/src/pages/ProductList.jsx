@@ -1,4 +1,4 @@
-// src/pages/ProductList.js
+// src/pages/ProductList.jsx
 import { useEffect, useState } from 'react';
 import { fetchProducts } from '../services/api';
 import { useCart } from '../context/CartContext';

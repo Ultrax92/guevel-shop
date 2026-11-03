@@ -2,7 +2,7 @@
 
 **Candidat :** Mickaël GUEVEL — **Date :** 03/11/2026 — **Dépôt :** https://github.com/Ultrax92/guevel-shop
 
-> Journal tenu au fil de l'épreuve. Les captures d'écran sont référencées `[capture: ...]`.
+> Journal tenu au fil de l'épreuve. Les captures d'écran (dossier `screenshots/`, rangées par session et préfixées par le numéro d'exercice) sont référencées `[capture : session-N/fichier.png]`.
 
 ---
 
@@ -74,12 +74,12 @@ Actions réalisées :
 1. **Secrets hors du code** : toutes les valeurs sensibles passent par des variables d'environnement ; `.env*` est ignoré par Git (seul `.env.example`, sans valeur réelle, est versionné). Vérification automatique avant chaque push : 0 secret dans l'historique Git.
 2. **Rotation des secrets** : les secrets distribués avec le sujet sont considérés comme compromis. Nouveaux `JWT_SECRET` et `INTERNAL_API_KEY` générés aléatoirement (32 octets), **différents en préprod et en prod**.
 3. **Base de données** : utilisateurs Atlas à moindre privilège (`readWrite` sur leur seule base), TLS obligatoire, base locale Docker authentifiée et non exposée sur l'hôte.
-   - Risque accepté : accès réseau Atlas `0.0.0.0/0` (les fonctions Vercel Hobby n'ont pas d'IP de sortie fixe), compensé par l'authentification forte, le TLS et le moindre privilège. `[capture: Atlas Network Access]`
+   - Risque accepté : accès réseau Atlas `0.0.0.0/0` (les fonctions Vercel Hobby n'ont pas d'IP de sortie fixe), compensé par l'authentification forte, le TLS et le moindre privilège. `[capture : session-1/E22-atlas-acces-reseau.png, session-1/E22-atlas-utilisateurs-base.png]`
 4. **Cloisonnement des microservices** : le gateway et les microservices exigent une clé interne partagée (`x-internal-key`, comparaison à temps constant). `/notify` n'est plus un relais d'e-mails public. Test : sans clé → 401, avec clé → 200.
 5. **Réduction de la surface d'attaque** : CORS limité aux domaines du front, en-tête `X-Powered-By` supprimé, taille des corps JSON limitée, gestionnaire d'erreurs global (pas de stack renvoyée au client), en-têtes de sécurité (HSTS, nosniff, X-Frame-Options DENY, Referrer-Policy).
 6. **Conteneurs** : images `node:22-alpine` exécutées avec l'utilisateur non-root `node`, `npm ci --omit=dev`, `HEALTHCHECK` intégré.
 7. **Dépendances** : `npm audit fix` sur tous les services, montée de version de nodemailer (6 → 10). Résultat : 0 vulnérabilité *high* ou *critical* sur les services Node. Contrôle automatisé dans la CI.
-8. **Secrets côté hébergeur** : variables Vercel de type *Secret* (illisibles après enregistrement), séparées par environnement (*Production* / *Preview* limité à la branche `develop`). Les variables non sensibles (URL, CORS, niveau de log) sont de type *Config*. `[capture: variables d'environnement Vercel]`
+8. **Secrets côté hébergeur** : variables Vercel de type *Secret* (illisibles après enregistrement), séparées par environnement (*Production* / *Preview* limité à la branche `develop`). Les variables non sensibles (URL, CORS, niveau de log) sont de type *Config*. `[capture : session-1/E22-vercel-variables-api.png, …-gateway.png, …-notifications.png, …-stock.png]`
 9. **Protection des déploiements** : l'authentification Vercel a été désactivée sur la préproduction afin que les correcteurs puissent y accéder ; la préprod ne contient que des données de test et les routes sensibles restent protégées (JWT, CORS, clé interne).
 10. **Bases initialisées** : seed des bases `exam1_preprod` et `exam1_prod` (5 produits + 1 compte admin, mot de passe différent par environnement, haché bcrypt).
 
@@ -87,7 +87,7 @@ Actions réalisées :
 
 ## E23 — Nom de domaine, DNS et certificats
 
-- Domaine réservé : **guevel-shop.xyz** (Hostinger, 2,37 € la première année, renouvellement automatique désactivé). `[capture: commande Hostinger]`
+- Domaine réservé : **guevel-shop.xyz** (Hostinger, 2,37 € la première année, renouvellement automatique désactivé).
 - Plan de nommage :
 
 | Composant | Production (`main`) | Préproduction (`develop`) |
@@ -106,10 +106,10 @@ Actions réalisées :
 | CNAME | `www` | `cname.vercel-dns.com` | `www` → Vercel (redirection 308 vers la racine) |
 | CNAME | `*` | `cname.vercel-dns.com` | Tous les sous-domaines (api, preprod, gateway…) → Vercel |
 
-  `[capture: zone DNS Hostinger]`
+  `[capture : session-1/E23-dns-hostinger-1-initial.png, session-1/E23-dns-hostinger-2-final.png, session-1/E23-vercel-domaines-valides.png]`
 - Chaque domaine est rattaché à son projet Vercel ; les domaines de préproduction sont liés à la branche `develop` (*Git branch domain*).
 - **Certificats** : émis automatiquement par Vercel (Let's Encrypt, challenge HTTP-01) pour chaque sous-domaine, renouvellement automatique.
-- **Vérification** (`curl`) : certificat valide (`ssl_verify_result=0`) sur tous les domaines ; `https://www.guevel-shop.xyz` → `308` vers `https://guevel-shop.xyz` ; en-tête HSTS présent. `[capture: cadenas navigateur + détail du certificat]`
+- **Vérification** (`curl`) : certificat valide (`ssl_verify_result=0`) sur tous les domaines ; `https://www.guevel-shop.xyz` → `308` vers `https://guevel-shop.xyz` ; en-tête HSTS présent. `[capture : session-1/E23-certificat-https.png]`
 - Remarque « DNS Change Recommended » dans Vercel : ce n'est pas une erreur. L'API Vercel renvoie `misconfigured: false` et `ipStatus: optional-change` : les valeurs historiques (`76.76.21.21`, `cname.vercel-dns.com`) restent valides, et Vercel suggère simplement ses nouvelles cibles (IP `216.198.79.1` et CNAME dédié par projet, `*.vercel-dns-017.com`). Évolution possible : remplacer le CNAME générique `*` par un CNAME explicite par sous-domaine. Ça évite aussi qu'un sous-domaine non prévu pointe vers Vercel.
 
 ---
@@ -119,7 +119,7 @@ Actions réalisées :
 ### Conteneurisation
 - Un `Dockerfile` par service ; frontend en build multi-étapes (Node → Nginx avec routage SPA et en-têtes de sécurité).
 - `docker-compose.yml` complet : mongo (authentifié, volume persistant, healthcheck), backend, gateway, notifications, stock-management, frontend.
-- Test réalisé : `docker compose up -d --build` → 6 conteneurs démarrés ; parcours complet validé (inscription, connexion user/admin, commande, 403 pour un user sur la liste des commandes, changement de statut par l'admin). `[capture: docker compose ps + test]`
+- Test réalisé : `docker compose up -d --build` → 6 conteneurs démarrés ; parcours complet validé (inscription, connexion user/admin, commande, 403 pour un user sur la liste des commandes, changement de statut par l'admin). `[capture : session-2/E27-E28-test-de-fumee-25-controles.png]` (test de fumée exécuté sur la pile Docker locale)
 
 ### Intégration continue — GitHub Actions (`.github/workflows/ci.yml`)
 Sur chaque push et pull request vers `main` / `develop` :
@@ -131,9 +131,9 @@ Sur chaque push et pull request vers `main` / `develop` :
 - `develop` → déploiement automatique en **préproduction** ; `main` → **production**.
 - Un service n'est reconstruit que si son dossier a changé depuis son dernier déploiement réussi (`ignoreCommand` basé sur `VERCEL_GIT_PREVIOUS_SHA`) : monorepo de 5 projets sans builds inutiles. Si ce commit est absent du clone partiel de Vercel, le service est reconstruit par sécurité (`git rev-parse --verify`).
 - Flux : feature → `develop` (préprod, recette) → pull request vers `main` (CI verte obligatoire) → production.
-- Mise en œuvre réelle : PR [#1](https://github.com/Ultrax92/guevel-shop/pull/1) `develop → main`, contrôles GitHub Actions et Vercel verts avant fusion. Seul le service modifié (API) a été reconstruit, les autres ont été ignorés automatiquement. `[capture: PR #1 et ses checks]`
+- Mise en œuvre réelle : PR [#1](https://github.com/Ultrax92/guevel-shop/pull/1) `develop → main`, contrôles GitHub Actions et Vercel verts avant fusion. Seul le service modifié (API) a été reconstruit, les autres ont été ignorés automatiquement. `[capture : session-1/E24-pull-request-1.png, session-1/E24-ci-github-verte.png, session-1/E24-images-docker-ghcr.png]`
 - Chaque `/health` expose la version déployée (`version` = commit), ce qui permet de vérifier d'un coup d'œil ce qui tourne en préprod et en prod.
-- Incident rencontré : à la création des projets, le tout premier déploiement (issu de `develop`) a été classé en *production* par Vercel. Correction : branche de production fixée à `main`, déploiements fautifs annulés, puis redéploiement. Les déploiements `develop` sont désormais bien en *Preview*. `[capture: liste des déploiements Vercel]`
+- Incident rencontré : à la création des projets, le tout premier déploiement (issu de `develop`) a été classé en *production* par Vercel. Correction : branche de production fixée à `main`, déploiements fautifs annulés, puis redéploiement. Les déploiements `develop` sont désormais bien en *Preview*. `[capture : session-1/E21-vercel-deploiement-api.png, …-frontend.png, …-gateway.png, …-notifications.png, …-stock.png]`
 
 ---
 
@@ -143,8 +143,8 @@ Sur chaque push et pull request vers `main` / `develop` :
 - **Log d'accès HTTP** : méthode, URL, code de statut, durée (sans corps ni en-têtes sensibles).
 - **Journal d'audit** (`audit: true`) : connexions réussies et échouées, inscriptions, changements de statut de commande (avec l'identifiant de l'admin), appels internes refusés.
 - **Suppression des données sensibles des logs** : plus aucun mot de passe, hash, token ni URI de base.
-- **Journal d'audit persistant** : chaque action sensible est aussi écrite dans la collection MongoDB `auditlogs` (action, niveau, utilisateur, IP réelle du client, environnement, date), avec une expiration automatique à 90 jours (index TTL). Les logs Vercel de l'offre Hobby ne sont conservés que peu de temps : l'audit reste ainsi consultable. Consultation réservée aux admins : `GET /api/audit?limit=50` (401 sans token, 403 pour un user). `[capture: réponse /api/audit]`
-- **Centralisation** : Vercel Runtime Logs regroupe par projet et par environnement les logs JSON de toutes les fonctions, avec filtres par niveau, domaine et branche. Exemple réel en préprod : les entrées `Audit: connexion réussie`, `Commande créée` et `Échec de l'envoi de la notification` y apparaissent. `[capture: Runtime Logs Vercel]`
+- **Journal d'audit persistant** : chaque action sensible est aussi écrite dans la collection MongoDB `auditlogs` (action, niveau, utilisateur, IP réelle du client, environnement, date), avec une expiration automatique à 90 jours (index TTL). Les logs Vercel de l'offre Hobby ne sont conservés que peu de temps : l'audit reste ainsi consultable. Consultation réservée aux admins : `GET /api/audit?limit=50` (401 sans token, 403 pour un user). `[capture : session-2/E27-E28-test-de-fumee-25-controles.png]` (contrôle « Journal d'audit (admin) »)
+- **Centralisation** : Vercel Runtime Logs regroupe par projet et par environnement les logs JSON de toutes les fonctions, avec filtres par niveau, domaine et branche. Exemple réel en préprod : les entrées `Audit: connexion réussie`, `Commande créée` et `Échec de l'envoi de la notification` y apparaissent. `[capture : session-1/E25-logs-vercel.png]`
 - Audit d'infrastructure : historique des déploiements Vercel, historique Git et des workflows GitHub, journal d'activité Atlas.
 
 ---
@@ -161,7 +161,7 @@ Sur chaque push et pull request vers `main` / `develop` :
 | Prod / Préprod | frontend (`/`) | HTTP(S) | code ≠ 2xx/3xx ou délai dépassé |
 | Prod / Préprod | api, gateway, notifications, stock (`/health`) | Mot-clé | la réponse ne contient plus `"status":"ok"` (couvre aussi la base indisponible côté API, qui renvoie `degraded`) |
 
-  Vérification toutes les 5 minutes, **alerte e-mail** au contact du compte. `[capture: tableau de bord UptimeRobot]`
+  Vérification toutes les 5 minutes, **alerte e-mail** au contact du compte. `[capture : session-1/E26-uptimerobot-10-moniteurs.png]`
 - Alerte de bout en bout : une panne de base fait passer l'API en `degraded` (HTTP 503), le mot-clé disparaît et l'alerte part. Le retour à la normale envoie une notification « Up ».
 - Complément : Vercel Runtime Logs pour le diagnostic, et la version (commit) dans `/health` pour relier un incident au déploiement en cause.
 
@@ -194,8 +194,10 @@ Sur chaque push et pull request vers `main` / `develop` :
 | 21 | Admin : un stock à 0 était refusé (`!stockValue`), erreurs de chargement non gérées | `Admin.jsx` | Contrôle corrigé, messages d'erreur, nom des produits dans le détail | ✅ |
 | 22 | `authenticateToken` : `next()` dans le `try`, une erreur en aval était présentée comme « token invalide » | `authMiddleware.js` | `next()` sorti du bloc | ✅ |
 | 23 | Test par défaut de CRA cassé (cherchait « learn react ») | `App.test.js` | Remplacé par des tests du panier | ✅ |
+| 24 | Déploiements Vercel en échec (`fatal: bad object`) après un push de plusieurs commits : le dernier commit déployé n'était plus dans le clone partiel | `*/vercel.json` | La règle vérifie que le commit existe (`git rev-parse --verify`), sinon elle reconstruit | ✅ |
+| 25 | Page admin : libellé « Status » en anglais, case « Nouveau stock » trop étroite (texte tronqué), titres de sections incohérents | `Admin.jsx` | Libellés en français, case élargie, titres harmonisés | ✅ |
 
-**Vérification** : test de fumée `scripts/smoke-test.js` (25 contrôles), exécuté en local (Docker) et intégré à la CI avec une vraie base MongoDB ; parcours complet rejoué dans un navigateur (inscription, connexion, panier, livraison, commande, déconnexion). `[capture: sortie du test de fumée]`
+**Vérification** : test de fumée `scripts/smoke-test.js` (25 contrôles), exécuté en local (Docker) et intégré à la CI avec une vraie base MongoDB ; parcours complet rejoué dans un navigateur (inscription, connexion, panier, livraison, commande, déconnexion). `[capture : session-2/E27-E28-test-de-fumee-25-controles.png, session-2/E27-E29-ci-verte-merge-pr4.png, session-1/E22-prod-administration.png]`
 
 ---
 
@@ -215,6 +217,8 @@ Sur chaque push et pull request vers `main` / `develop` :
 | 10 | `/notify` ouvert à tous (session 1) | Relais d'e-mails abusif | Clé interne à temps constant entre services | 401 sans clé |
 | 11 | **Dépendances vulnérables** | Exploitation de failles connues | Services Node : `npm audit fix` ; frontend : **migration CRA → Vite** (CRA n'est plus maintenu) | Frontend : **71 vulnérabilités (dont 4 critiques) → 0** ; services : 0 high/critical (contrôle CI) |
 
+`[capture : session-2/E28-cookie-httponly-secure-strict.png, session-2/E28-console-document-cookie-vide.png, session-2/E28-localstorage-vide.png, session-2/E28-npm-audit-frontend-0-vulnerabilite.png]`
+
 Qualité du code : **ESLint** (flat config, règles React/Hooks) et **Prettier** configurés à la racine pour tout le dépôt, contrôlés par un job CI dédié ; les erreurs remontées par ESLint ont été corrigées (bug n° 22 notamment).
 
 Remarque sur `connect-flash` (cité dans les consignes) : ce module repose sur des sessions serveur et des rendus côté serveur. L'application étant une API JSON consommée par une SPA React, l'équivalent mis en place est un format d'erreur uniforme (`message` + `details`) affiché par le front dans les formulaires.
@@ -223,9 +227,9 @@ Remarque sur `connect-flash` (cité dans les consignes) : ce module repose sur d
 
 ## E29 — Documentation et CHANGELOG
 
-- **Documentation générée à partir du code** : commentaires JSDoc (`@module`, `@param`, `@returns`, `@typedef`) sur tous les fichiers du backend, du gateway et des microservices, puis génération HTML par `npm run docs` (JSDoc), dans [`docs/api`](docs/api/index.html) : 66 pages, une par module, avec le code source annoté. La CI échoue si un commentaire JSDoc est invalide. `[capture: page d'accueil et d'un module de docs/api]`
+- **Documentation générée à partir du code** : commentaires JSDoc (`@module`, `@param`, `@returns`, `@typedef`) sur tous les fichiers du backend, du gateway et des microservices, puis génération HTML par `npm run docs` (JSDoc), dans [`docs/api`](docs/api/index.html) : 66 pages, une par module, avec le code source annoté. La CI échoue si un commentaire JSDoc est invalide. `[capture : session-2/E29-doc-jsdoc-accueil.png, session-2/E29-doc-jsdoc-stockService.png]`
 - **README.md** : architecture, tableau des routes de l'API, démarrage local (Docker ou non), scripts, flux CI/CD, sécurité, supervision.
-- **CHANGELOG.md** au format *Keep a Changelog* et versionnage sémantique : `1.0.0` (version fournie), `1.1.0` (mise en production), `2.0.0` (robustesse, sécurité, documentation).
+- **CHANGELOG.md** au format *Keep a Changelog* et versionnage sémantique : `1.0.0` (version fournie), `1.1.0` (mise en production), `2.0.0` (robustesse, sécurité, documentation), `2.0.1` (finitions de la page admin).
 - **Historique Git** lisible : commits conventionnels (`feat`, `fix`, `ci`, `docs`, `style`…) avec description détaillée, formatage isolé dans un commit `style`.
 
 ---
