@@ -79,7 +79,9 @@ Actions réalisées :
 5. **Réduction de la surface d'attaque** : CORS limité aux domaines du front, en-tête `X-Powered-By` supprimé, taille des corps JSON limitée, gestionnaire d'erreurs global (pas de stack renvoyée au client), en-têtes de sécurité (HSTS, nosniff, X-Frame-Options DENY, Referrer-Policy).
 6. **Conteneurs** : images `node:22-alpine` exécutées avec l'utilisateur non-root `node`, `npm ci --omit=dev`, `HEALTHCHECK` intégré.
 7. **Dépendances** : `npm audit fix` sur tous les services, montée de version de nodemailer (6 → 10). Résultat : 0 vulnérabilité *high* ou *critical* sur les services Node. Contrôle automatisé dans la CI.
-8. **Protection des déploiements Vercel** : les URL techniques `*.vercel.app` restent protégées par l'authentification Vercel, seuls les domaines personnalisés sont publics.
+8. **Secrets côté hébergeur** : variables Vercel de type *Secret* (illisibles après enregistrement), séparées par environnement (*Production* / *Preview* limité à la branche `develop`). Les variables non sensibles (URL, CORS, niveau de log) sont de type *Config*. `[capture: variables d'environnement Vercel]`
+9. **Protection des déploiements** : l'authentification Vercel a été désactivée sur la préproduction afin que les correcteurs puissent y accéder ; la préprod ne contient que des données de test et les routes sensibles restent protégées (JWT, CORS, clé interne).
+10. **Bases initialisées** : seed des bases `exam1_preprod` et `exam1_prod` (5 produits + 1 compte admin, mot de passe différent par environnement, haché bcrypt).
 
 ---
 
@@ -96,8 +98,18 @@ Actions réalisées :
 | Notifications | `notifications.guevel-shop.xyz` | `notifications-preprod.guevel-shop.xyz` |
 | Stock | `stock.guevel-shop.xyz` | `stock-preprod.guevel-shop.xyz` |
 
-- Zone DNS chez Hostinger : `A @ → 76.76.21.21`, `CNAME www → cname.vercel-dns.com`, `CNAME * → cname.vercel-dns.com`. `[capture: zone DNS]`
-- Certificats : émis automatiquement par Vercel (Let's Encrypt) pour chaque sous-domaine, renouvellement automatique. *(vérification à compléter)*
+- Zone DNS chez Hostinger (serveurs DNS Hostinger conservés), TTL 3600 :
+
+| Type | Nom | Valeur | Rôle |
+|---|---|---|---|
+| A | `@` | `76.76.21.21` | Domaine racine → réseau Vercel |
+| CNAME | `www` | `cname.vercel-dns.com` | `www` → Vercel (redirection 308 vers la racine) |
+| CNAME | `*` | `cname.vercel-dns.com` | Tous les sous-domaines (api, preprod, gateway…) → Vercel |
+
+  `[capture: zone DNS Hostinger]`
+- Chaque domaine est rattaché à son projet Vercel ; les domaines de préproduction sont liés à la branche `develop` (*Git branch domain*).
+- **Certificats** : émis automatiquement par Vercel (Let's Encrypt, challenge HTTP-01) pour chaque sous-domaine, renouvellement automatique.
+- **Vérification** (`curl`) : certificat valide (`ssl_verify_result=0`) sur tous les domaines ; `https://www.guevel-shop.xyz` → `308` vers `https://guevel-shop.xyz` ; en-tête HSTS présent. `[capture: cadenas navigateur + détail du certificat]`
 
 ---
 
@@ -118,8 +130,9 @@ Sur chaque push et pull request vers `main` / `develop` :
 - `develop` → déploiement automatique en **préproduction** ; `main` → **production**.
 - Un service n'est reconstruit que si son dossier a changé depuis son dernier déploiement réussi (`ignoreCommand` basé sur `VERCEL_GIT_PREVIOUS_SHA`) : monorepo de 5 projets sans builds inutiles.
 - Flux : feature → `develop` (préprod, recette) → pull request vers `main` (CI verte obligatoire) → production.
-
-*(captures des déploiements à ajouter)*
+- Mise en œuvre réelle : PR [#1](https://github.com/Ultrax92/guevel-shop/pull/1) `develop → main`, contrôles GitHub Actions et Vercel verts avant fusion. Seul le service modifié (API) a été reconstruit, les autres ont été ignorés automatiquement. `[capture: PR #1 et ses checks]`
+- Chaque `/health` expose la version déployée (`version` = commit), ce qui permet de vérifier d'un coup d'œil ce qui tourne en préprod et en prod.
+- Incident rencontré : à la création des projets, le tout premier déploiement (issu de `develop`) a été classé en *production* par Vercel. Correction : branche de production fixée à `main`, déploiements fautifs annulés, puis redéploiement. Les déploiements `develop` sont désormais bien en *Preview*. `[capture: liste des déploiements Vercel]`
 
 ---
 
@@ -129,16 +142,18 @@ Sur chaque push et pull request vers `main` / `develop` :
 - **Log d'accès HTTP** : méthode, URL, code de statut, durée (sans corps ni en-têtes sensibles).
 - **Journal d'audit** (`audit: true`) : connexions réussies et échouées, inscriptions, changements de statut de commande (avec l'identifiant de l'admin), appels internes refusés.
 - **Suppression des données sensibles des logs** : plus aucun mot de passe, hash, token ni URI de base.
+- **Journal d'audit persistant** : chaque action sensible est aussi écrite dans la collection MongoDB `auditlogs` (action, niveau, utilisateur, IP réelle du client, environnement, date), avec une expiration automatique à 90 jours (index TTL). Les logs Vercel de l'offre Hobby ne sont conservés que peu de temps : l'audit reste ainsi consultable. Consultation réservée aux admins : `GET /api/audit?limit=50` (401 sans token, 403 pour un user). `[capture: réponse /api/audit]`
+- **Centralisation** : Vercel Runtime Logs regroupe par projet et par environnement les logs JSON de toutes les fonctions, avec filtres par niveau, domaine et branche. Exemple réel en préprod : les entrées `Audit: connexion réussie`, `Commande créée` et `Échec de l'envoi de la notification` y apparaissent. `[capture: Runtime Logs Vercel]`
 - Audit d'infrastructure : historique des déploiements Vercel, historique Git et des workflows GitHub, journal d'activité Atlas.
-
-*(outil de centralisation des logs à compléter)*
 
 ---
 
 ## E26 — Supervision et alertes
 
-- Sondes `/health` sur chaque service (le backend vérifie aussi la connexion MongoDB : 200 si la base répond, 503 sinon).
-- *(à compléter : moniteurs UptimeRobot ou Better Stack sur les deux environnements, alertes e-mail)*
+- Sondes `/health` sur chaque service, qui renvoient `status`, `service`, `env` et `version`. Le backend envoie en plus un vrai `ping` à MongoDB : 200 si la base répond, 503 sinon.
+- Test de panne en local : arrêt du conteneur Mongo → `/health` passe en 503 `degraded`, puis revient automatiquement en 200 après redémarrage (reconnexion automatique).
+- Faux positif corrigé : au réveil d'une instance serverless, l'ancien contrôle (`readyState`) signalait `db: down` pendant la reconnexion. Il est remplacé par un `ping` réel, pour éviter les fausses alertes.
+- *(moniteurs UptimeRobot sur les deux environnements + alertes e-mail : en cours)*
 
 ---
 
@@ -151,6 +166,8 @@ Sur chaque push et pull request vers `main` / `develop` :
 | 3 | `docker-compose.yml` : ports faux, gateway absent | `docker-compose.yml` | Réécriture complète | ✅ |
 | 4 | Build Vercel en échec (warning ESLint `setError` inutilisé) | `frontend/src/pages/Register.js` | Message d'erreur affiché dans le formulaire | ✅ |
 | 5 | Accès admin et dump absents | `backend/seeder.js` | Création du premier admin à partir des variables d'environnement | ✅ |
+| 6 | Identifiants SMTP fournis refusés par Gmail (`535 BadCredentials`) | configuration | Mot de passe d'application Gmail du candidat, stocké en *Secret* Vercel | ⏳ |
+| 7 | `/health` : faux « db: down » au réveil d'une instance serverless | `backend/app.js` | `ping` MongoDB réel | ✅ |
 | … | *(suite en session 2)* | | | |
 
 ---

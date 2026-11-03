@@ -2,6 +2,7 @@
 const Order = require('../models/Order');
 const logger = require('../config/logger');
 const { sendNotification } = require('../services/notificationService');
+const { audit } = require('../services/auditService');
 
 
 exports.createOrder = async (req, res) => {
@@ -175,7 +176,7 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Commande non trouvée." });
     }
 
-    logger.info('Audit: statut de commande modifié', { audit: true, orderId, status, by: req.user.userId });
+    await audit(req, 'statut de commande modifié', { actorId: req.user.userId, details: { orderId, status } });
     res.status(200).json({ message: "Statut mis à jour avec succès", order });
   } catch (error) {
     logger.error('Erreur lors de la mise à jour de la commande', { orderId, error: error.message });

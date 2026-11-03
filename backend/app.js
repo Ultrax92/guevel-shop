@@ -7,6 +7,8 @@ const logger = require('./config/logger');
 
 const app = express();
 app.disable('x-powered-by');
+// Derrière le proxy Vercel / Nginx : req.ip = IP réelle du client (X-Forwarded-For du premier proxy)
+app.set('trust proxy', 1);
 
 // CORS restreint aux fronts autorisés (liste séparée par des virgules)
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
@@ -62,6 +64,7 @@ app.use(async (req, res, next) => {
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/audit', require('./routes/auditRoutes'));
 
 app.use((req, res) => res.status(404).json({ message: 'Ressource introuvable' }));
 
