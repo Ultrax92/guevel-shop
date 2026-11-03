@@ -1,4 +1,4 @@
-// src/pages/Register.js
+// src/pages/Register.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import http, { errorMessage } from '../services/http';

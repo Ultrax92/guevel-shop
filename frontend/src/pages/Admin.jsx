@@ -1,4 +1,4 @@
-// src/pages/Admin.js
+// src/pages/Admin.jsx
 import { useState, useEffect } from 'react';
 import {
   getOrders,
@@ -112,7 +112,7 @@ const Admin = () => {
       {error && <p className="text-red-500 mb-4">{error}</p>}
       {/* Gestion des Commandes */}
       <div className="mb-6">
-        <h3 className="text-xl font-semibold">Gestion des Commandes</h3>
+        <h3 className="text-xl font-semibold mb-2">Gestion des commandes</h3>
         {orders.length === 0 && <p className="text-gray-500">Aucune commande.</p>}
         <ul>
           {orders.map((order) => (
@@ -124,7 +124,7 @@ const Admin = () => {
                 <strong>Date :</strong> {new Date(order.createdAt).toLocaleString('fr-FR')}
               </p>
               <p>
-                <strong>Status :</strong> {order.status}
+                <strong>Statut :</strong> {order.status}
               </p>
               {order.status === 'En attente' && (
                 <button
@@ -142,7 +142,7 @@ const Admin = () => {
                   className="bg-blue-500 text-white px-2 py-1 mt-2 rounded mr-2"
                   disabled={loadingOrder === order._id}
                 >
-                  {loadingOrder === order._id ? 'Mise à jour...' : 'Changer état à "Expédiée"'}
+                  {loadingOrder === order._id ? 'Mise à jour...' : 'Marquer « Expédiée »'}
                 </button>
               )}
 
@@ -187,7 +187,7 @@ const Admin = () => {
 
       {/* Gestion des Produits */}
       <div>
-        <h2 className="text-xl font-bold">Gestion des Produits</h2>
+        <h3 className="text-xl font-semibold mb-2">Gestion des produits</h3>
         <table className="min-w-full border">
           <thead>
             <tr className="bg-gray-200">
@@ -210,7 +210,7 @@ const Admin = () => {
                     min="0"
                     step="1"
                     value={newStock[product._id] ?? ''}
-                    className="border p-2 w-20"
+                    className="border p-2 w-40"
                     onChange={(e) =>
                       setNewStock({
                         ...newStock,
@@ -236,12 +236,12 @@ const Admin = () => {
       {selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-1/2">
-            <h2 className="text-xl font-bold mb-4">Détails de la Commande</h2>
+            <h2 className="text-xl font-bold mb-4">Détails de la commande</h2>
             <p>
               <strong>ID :</strong> {selectedOrder._id}
             </p>
             <p>
-              <strong>Status :</strong> {selectedOrder.status}
+              <strong>Statut :</strong> {selectedOrder.status}
             </p>
             <p>
               <strong>Total :</strong> {selectedOrder.total} €
