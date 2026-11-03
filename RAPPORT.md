@@ -116,7 +116,7 @@ Sur chaque push et pull request vers `main` / `develop` :
 
 ### Déploiement continu — Vercel
 - `develop` → déploiement automatique en **préproduction** ; `main` → **production**.
-- Un service n'est reconstruit que si son dossier a changé (`ignoreCommand: git diff --quiet HEAD^ HEAD -- .`).
+- Un service n'est reconstruit que si son dossier a changé depuis son dernier déploiement réussi (`ignoreCommand` basé sur `VERCEL_GIT_PREVIOUS_SHA`) : monorepo de 5 projets sans builds inutiles.
 - Flux : feature → `develop` (préprod, recette) → pull request vers `main` (CI verte obligatoire) → production.
 
 *(captures des déploiements à ajouter)*
