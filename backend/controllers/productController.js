@@ -1,35 +1,47 @@
 // controllers/productController.js
 const Product = require('../models/Product');
 const { audit } = require('../services/auditService');
+const { sendNotification } = require('../services/notificationService');
 
-exports.getProducts = async (req, res) => {
-    const products = await Product.find();
+/**
+ * Liste publique des produits.
+ * @type {import('express').RequestHandler}
+ */
+exports.getProducts = async (req, res, next) => {
+  try {
+    const products = await Product.find().sort({ name: 1 }).lean();
     res.json(products);
+  } catch (error) {
+    next(error);
+  }
 };
 
-exports.updateProductStock = async (req, res) => {
-    try {
-      const { stock } = req.body;
-      const {productId} = req.params;
-  
-      if (stock < 0) {
-        return res.status(400).json({ message: "Le stock ne peut pas être négatif." });
-      }
-  
-      const product = await Product.findById(productId);
-      if (!product) {
-        return res.status(404).json({ message: "Produit non trouvé." });
-      }
-  
-      product.stock = stock;
-      product.updatedAt = Date.now();
-  
-      await product.save();
-      await audit(req, 'stock produit modifié', { actorId: req.user.userId, details: { productId, stock } });
-  
-      res.json({ message: "Stock mis à jour avec succès.", product });
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour du stock :", error);
-      res.status(500).json({ message: "Erreur serveur." });
+/**
+ * Mise à jour du stock d'un produit (admin, valeur validée par Joi : entier ≥ 0).
+ * @type {import('express').RequestHandler}
+ */
+exports.updateProductStock = async (req, res, next) => {
+  try {
+    const { stock } = req.body;
+    const { productId } = req.params;
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Produit non trouvé." });
     }
-  };
+
+    const previous = product.stock;
+    product.stock = stock;
+    await product.save();
+
+    await audit(req, 'stock produit modifié', { actorId: req.user.userId, details: { productId, from: previous, to: stock } });
+    await sendNotification({
+      subject: 'Mise à jour du stock',
+      text: `Le stock du produit "${product.name}" est passé de ${previous} à ${stock}.`,
+    });
+
+    res.json({ message: "Stock mis à jour avec succès.", product });
+  } catch (error) {
+    next(error);
+  }
+};
