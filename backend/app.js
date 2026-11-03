@@ -42,6 +42,7 @@ app.get('/health', async (req, res) => {
     service: 'backend',
     env: process.env.APP_ENV || 'local',
     db: dbUp ? 'up' : 'down',
+    version: process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7) : 'local',
   });
 });
 

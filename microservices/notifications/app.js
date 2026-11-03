@@ -19,7 +19,7 @@ const transporter = nodemailer.createTransport({
 
 // Sonde de supervision
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'notifications', env: process.env.APP_ENV || 'local' });
+  res.json({ status: 'ok', service: 'notifications', env: process.env.APP_ENV || 'local', version: process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7) : 'local' });
 });
 
 // Route pour envoyer un email
